@@ -651,9 +651,10 @@
             voiceMode: false,
 
             // AI Integration
+            // AI Integration
             apiKey: localStorage.getItem('GENIUSZ_API_KEY') || '',
             aiMode: false,
-            ttsMode: localStorage.getItem('GENIUSZ_TTS_MODE') || 'browser' // 'browser' | 'cloud'
+            ttsMode: localStorage.getItem('GENIUSZ_TTS_MODE') || (localStorage.getItem('GENIUSZ_API_KEY') ? 'cloud' : 'browser')
         };
 
         // --- LOGIC ---
@@ -662,10 +663,7 @@
             const p1Name = document.getElementById('p1-name').value || 'Játékos 1';
             const p2Name = document.getElementById('p2-name').value || 'Játékos 2';
 
-            // Checkbox for voice mode
-            // Checkbox for voice mode
-            const voiceEnabled = document.getElementById('voice-mode-toggle').checked;
-            gameState.voiceMode = voiceEnabled;
+            gameState.voiceMode = true;
 
             // Checkbox for AI mode
             const aiEnabled = document.getElementById('ai-mode-toggle') ? document.getElementById('ai-mode-toggle').checked : false;
@@ -678,89 +676,25 @@
             gameState.players[2].score = 0;
             gameState.playedQuestionIds = [];
 
-            // Voice Mode initialization
-            if (gameState.voiceMode) {
-                initVoiceFeatures();
-            }
-
             startRound(1);
         }
 
-        // --- VOICE CONTROL ---
+        // --- TTS CONTROL ---
 
-        let recognition = null;
-        let isListening = false;
-        let isSystemSpeaking = false; // Flag to prevent self-answering
+        let isSystemSpeaking = false; // Flag to prevent overlaps
         let voiceObjHU = null; // Store the Hungarian voice
-        let voiceObjEN = null; // Store the English voice
-
-        // List of terms to be read in English
-        const ENGLISH_TERMS = /\b(Michael Jackson|George Washington|Harry Potter|Shakespeare|Brad Pitt|Angelina Jolie|Johnny Depp|Tom Cruise|Bruce Willis|Steve Jobs|Elon Musk|Bill Gates|Facebook|Google|Windows|World Wide Web|YouTube|TikTok|SpaceX|United States|New York|Washington|London|Star Wars|Game of Thrones|Titanic|Beatles|Queen|Rolling Stones|Iron Man|Spider-Man|Batman|Superman|Joker|Darth Vader|Walt Disney|Mickey Mouse|Donald Trump|Barack Obama|Joe Biden|Kennedy|Lincoln|Churchill|Einstein|Newton|Da Vinci|Picasso|Mozart|Beethoven|Elvis Presley|Madonna|Lady Gaga|Eminem|Rihanna|Beyoncé|Justin Bieber|Taylor Swift|Drake|Kanye West|Kim Kardashian|Netflix|Amazon|Apple|Microsoft|Samsung|Sony|PlayStation|Xbox|Nintendo|Mario|Zelda|Pokemon|Minecraft|Fortnite|Coca-Cola|Pepsi|McDonald's|Burger King|Pizza Hut|Starbucks|Nike|Adidas|Puma|Gucci|Prada|Ferrari|Lamborghini|Porsche|Mercedes|BMW|Audit|Toyota|Honda|Suzuki|Yamaha|Kawasaki|Hollywood|Oscar|Grammy|Emmy|Nobel|Pulitzer|Wimbledon|Super Bowl|NBA|FIFA|UEFA|Champions League|Formula 1|Grand Prix|Tour de France|Olympics|Eurovision|X-Factor|Got Talent|Voice|Survivor|Big Brother|Friend's|Breaking Bad|Stranger Things|The Crown|Black Mirror|Sherlock|Doctor Who|James Bond|Skyfall|Casino Royale|Spectre|No Time to Die|Mission: Impossible|Top Gun|Terminator|Matrix|Avatar|Jurassic Park|Indiana Jones|Lord of the Rings|Hobbit|Hunger Games|Twilight|Marvel|DC|Avengers|Justice League|X-Men|Wonder Woman|Captain America|Thor|Hulk|Black Panther|Deadpool|Wolverine|Thanos|Voldemort|Dumbledore|Snape|Gandalf|Frodo|Legolas|Aragorn|Gollum|Sauron|Yoda|Luke Skywalker|Leia|Han Solo|Chewbacca|R2-D2|C-3PO|Obi-Wan Kenobi|Anakin Skywalker|Padme|Palpatine|Kylo Ren|Rey|Finn|Poe Dameron|BB-8|Mandalorian|Grogu|Baby Yoda|Witcher|Geralt|Yennefer|Ciri|Cyberpunk|Grand Theft Auto|Call of Duty|Counter-Strike|League of Legends|Dota|World of Warcraft|Overwatch|Apex Legends|Valorant|Among Us|Roblox|Twitch|Discord|Reddit|Twitter|Instagram|Snapchat|Pinterest|LinkedIn|WhatsApp|Telegram|Viber|Skype|Zoom|Teams|Outlook|Gmail|Yahoo|Bing|DuckDuckGo|Baidu|Yandex|Alibaba|Tencent|Huawei|Xiaomi|OnePlus|Lenovo|Asus|Acer|Dell|HP|Intel|AMD|Nvidia|Qualcomm|Snapdragon|Exynos|Kir|Bionic|Ryzen|Core|Pentium|Celeron|Xeon|Threadripper|Epyc|Opteron|Athlon|Sempron|Phenom|Turion|GeForce|Radeon|Arc|FirePro|Quadro|Tesla|Titan|RTX|GTX|GTS|GT|GS|FX|S3|ViRGE|Savage|Matrox|Mystique|Millennium|Parhelia|Voodoo|Banshee|Riva|TNT|Kyro|PowerVR|Adreno|Mali|Vivante|VideoCore|Tegra|X1|K1|Parker|Xavier|Orin|Atari|Amiga|Commodore|Sinclair|Spectrum|Z80|6502|68000|8086|8088|286|386|486|Pentium|Itanium|Atom|Quark|Galileo|Edison|Curie|Joule|Myriad|Movidius|Nervana|Altera|Stratix|Arria|Cyclone|Max|Agilex|Versal|Kintex|Virtex|Artix|Spartan|Zynq|MicroBlaze|Nios|RISC-V|ARM|MIPS|SPARC|PowerPC|Alpha|PA-RISC|Itanium|Transmeta|Crusoe|Efficeon|Via|Nano|Eden|C7|C3|Cyrix|MediaGX|Geode|Elbrus|Baikal|Loongson|ShenWei|Sunway|Phytium|Hygon|Zhaoxin)\b/gi;
-
-        function initVoiceFeatures() {
-            if ('webkitSpeechRecognition' in window) {
-                recognition = new webkitSpeechRecognition();
-                recognition.continuous = true; // Keep listening
-                recognition.lang = 'hu-HU';
-                recognition.interimResults = false;
-                recognition.maxAlternatives = 1;
-
-                recognition.onresult = (event) => {
-                    // If system is speaking, ignore input
-                    if (isSystemSpeaking) return;
-
-                    // Get the latest result
-                    const lastResultIdx = event.results.length - 1;
-                    const speechResult = event.results[lastResultIdx][0].transcript;
-
-                    console.log('Felismerve: ' + speechResult);
-                    verifyVoiceAnswer(speechResult);
-                };
-
-                recognition.onerror = (event) => {
-                    console.error('Speech recognition error', event.error);
-                    // Don't stop fully on error, try to stay alive if possible
-                    if (event.error === 'not-allowed') {
-                        isListening = false;
-                        alert("Mikrofon hozzáférés megtagadva. Ellenőrizd a beállításokat!");
-                    }
-                };
-
-                recognition.onend = () => {
-                    // Auto-restart if we didn't intend to stop and voice mode is still on
-                    if (gameState.voiceMode && isListening) {
-                        console.log("Recognition restarted");
-                        try { recognition.start(); } catch (e) { }
-                    } else {
-                        isListening = false;
-                    }
-                };
-
-                // Start immediately
-                startListening();
-
-                // Load voices
-                loadVoices();
-                if (window.speechSynthesis.onvoiceschanged !== undefined) {
-                    window.speechSynthesis.onvoiceschanged = loadVoices;
-                }
-
-            } else {
-                alert("A böngésző nem támogatja a hangfelismerést (Chrome ajánlott).");
-                gameState.voiceMode = false;
-            }
-        }
 
         function loadVoices() {
             const voices = window.speechSynthesis.getVoices();
             // Try to find a nice Hungarian voice (Google's is usually good)
             voiceObjHU = voices.find(v => v.lang.includes('hu') && v.name.includes('Google')) ||
                 voices.find(v => v.lang.includes('hu'));
+        }
 
-            // Try to find a nice English voice
-            voiceObjEN = voices.find(v => v.lang.includes('en-US') && v.name.includes('Google')) ||
-                voices.find(v => v.lang.includes('en-GB')) ||
-                voices.find(v => v.lang.includes('en'));
+        // Initialize voices
+        loadVoices();
+        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
         }
 
         async function playCloudTTS(text) {
@@ -785,18 +719,15 @@
                 const audio = new Audio("data:audio/mp3;base64," + audioContent);
                 audio.onended = () => {
                     isSystemSpeaking = false;
-                    if (gameState.status === 'QUESTION') {
-                        startListening();
-                    }
                 };
-
                 isSystemSpeaking = true;
                 audio.play();
 
             } catch (e) {
                 console.error("Cloud TTS Hiba:", e);
                 // Fallback to browser
-                alert("Cloud TTS hiba (API engedélyezve van?). Visszaváltás böngészőre.");
+                // alert("Cloud TTS hiba (API engedélyezve van?). Visszaváltás böngészőre.");
+                // Suppress alert to avoid annoyance if it falls back often, just log
                 gameState.ttsMode = 'browser';
                 speakText(text);
             }
@@ -814,166 +745,25 @@
             // EXISTING BROWSER LOGIC...
             // Stop previous speech
             window.speechSynthesis.cancel();
-            isSystemSpeaking = true; // Block STT
+            isSystemSpeaking = true;
 
-            // Smart TTS: Split text by English terms
-            // "Ki a Michael Jackson?" -> ["Ki a ", "Michael Jackson", "?"]
-            const segments = text.split(ENGLISH_TERMS);
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.0;
+            if (voiceObjHU) utterance.voice = voiceObjHU;
+            utterance.lang = 'hu-HU';
 
-            // We need to filter out empty strings/undefined that might result from split
-            const cleanSegments = segments.filter(s => s && s.trim().length > 0);
+            utterance.onend = () => {
+                isSystemSpeaking = false;
+            };
+            utterance.onerror = () => {
+                isSystemSpeaking = false;
+            };
 
-            cleanSegments.forEach((segment, index) => {
-                const isLast = index === cleanSegments.length - 1;
-                const isEnglish = ENGLISH_TERMS.test(segment);
-
-                const utterance = new SpeechSynthesisUtterance(segment);
-                utterance.rate = 1.0;
-
-                if (isEnglish && voiceObjEN) {
-                    utterance.voice = voiceObjEN;
-                    utterance.lang = 'en-US';
-                    utterance.rate = 0.9; // Slightly slower for English names to be clear
-                } else {
-                    utterance.voice = voiceObjHU; // Fallback to HU voice (or mixed)
-                    utterance.lang = 'hu-HU';
-                }
-
-                // Only unblock listening after the LAST segment
-                if (isLast) {
-                    utterance.onend = () => {
-                        isSystemSpeaking = false;
-                        if (gameState.status === 'QUESTION') {
-                            startListening();
-                        }
-                    };
-                    utterance.onerror = () => {
-                        isSystemSpeaking = false;
-                    };
-                }
-
-                window.speechSynthesis.speak(utterance);
-            });
+            window.speechSynthesis.speak(utterance);
         }
 
-        function startListening() {
-            if (!gameState.voiceMode || !recognition || isListening) return;
-            try {
-                recognition.start();
-                isListening = true;
-                const micIcon = document.getElementById('mic-icon');
-                if (micIcon) micIcon.classList.add('text-red-500', 'animate-pulse');
-            } catch (e) {
-                // Already started or error
-                if (e.name !== 'InvalidStateError') console.log(e);
-                isListening = true; // Assume running
-            }
-        }
+        // REMOVED startListening, stopListening, verifyVoiceAnswer, verifyAnswerAI, isAnswerCorrect, levenshtein
 
-        function stopListening() {
-            // We DON'T actually stop the recognition instance in "continuous" mode 
-            // to avoid permission prompts. We just update state if needed.
-            // But if we truly want to stop (e.g. game over or toggle off):
-            if (!gameState.voiceMode && recognition) {
-                recognition.stop();
-                isListening = false;
-            }
-        }
-
-        function verifyVoiceAnswer(spokenText) {
-            if (gameState.status !== 'QUESTION') return;
-
-            const correctAnswer = gameState.currentQuestion.a;
-
-            // Fuzzy match (Levenshtein távolság vagy részleges egyezés)
-            // HA AI Mód van és van API kulcs, akkor AI ellenőrzés
-            if (gameState.aiMode && gameState.apiKey) {
-                verifyAnswerAI(spokenText, correctAnswer, gameState.currentQuestion.q);
-            } else {
-                // Hagyományos Fuzzy match
-                if (isAnswerCorrect(spokenText, correctAnswer)) {
-                    revealAnswer();
-                    setTimeout(() => { handleResult(true); }, 1500);
-                } else {
-                    console.log("Rossz válasz (hang):", spokenText);
-                }
-            }
-        }
-
-        async function verifyAnswerAI(userAnswer, correctAnswer, questionText) {
-            console.log("AI Verifikáció...", userAnswer);
-            try {
-                const prompt = `
-Context: A quiz game in Hungarian.
-Question: "${questionText}"
-Official Answer: "${correctAnswer}"
-Player Answer: "${userAnswer}"
-
-Task: Decide if the Player Answer is correct based on the Official Answer. 
-Accept synonyms, typos, or partial names if they unambiguously refer to the same entity.
-Strictness: High (but fair).
-Output: JSON object { "correct": boolean }
-`;
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${gameState.apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
-
-                const data = await response.json();
-                const text = data.candidates[0].content.parts[0].text;
-                // Clean markdown JSON
-                const jsonStr = text.replace(/```json|```/g, '').trim();
-                const result = JSON.parse(jsonStr);
-
-                if (result.correct) {
-                    revealAnswer();
-                    // AI hangos visszajelzés (opcionális)
-                    if (gameState.voiceMode) speakText("Elfogadom!");
-                    setTimeout(() => { handleResult(true); }, 2000); // Kicsit hosszabb idő
-                } else {
-                    console.log("AI szerint rossz:", userAnswer);
-                }
-
-            } catch (e) {
-                console.error("AI Verify Error:", e);
-                // Fallback to fuzzy
-                if (isAnswerCorrect(userAnswer, correctAnswer)) {
-                    revealAnswer();
-                    setTimeout(() => { handleResult(true); }, 1500);
-                }
-            }
-        }
-
-        function isAnswerCorrect(spoken, correct) {
-            // Normalizálás (kisbetű, ékezetek, stb opcionális)
-            const s = spoken.toLowerCase().trim();
-            const c = correct.toLowerCase().trim();
-
-            // Ha benne van a válasz a kimondott szövegben (pl. "A válasz Budapest" -> "Budapest")
-            if (s.includes(c) || c.includes(s)) return true;
-
-            // Levenshtein distance (egyszerű implementáció)
-            if (levenshtein(s, c) <= 2) return true; // 2 elütés engedélyezett
-
-            return false;
-        }
-
-        function levenshtein(a, b) {
-            const matrix = [];
-            for (let i = 0; i <= b.length; i++) { matrix[i] = [i]; }
-            for (let j = 0; j <= a.length; j++) { matrix[0][j] = j; }
-            for (let i = 1; i <= b.length; i++) {
-                for (let j = 1; j <= a.length; j++) {
-                    if (b.charAt(i - 1) == a.charAt(j - 1)) {
-                        matrix[i][j] = matrix[i - 1][j - 1];
-                    } else {
-                        matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1));
-                    }
-                }
-            }
-            return matrix[b.length][a.length];
-        }
 
 
         function shuffle(array) {
@@ -1113,10 +903,9 @@ The answer should be concise.`;
             gameState.timer = 10;
 
             render();
+
             // Voice mode: Read question
             if (gameState.voiceMode) {
-                // Ensure listening is active
-                startListening();
                 speakText(q.q);
             }
             startTimer();
@@ -1138,7 +927,7 @@ The answer should be concise.`;
         function revealAnswer() {
             clearInterval(gameState.timerInterval);
             window.speechSynthesis.cancel(); // Stop speaking
-            // Note: We do NOT stopListening() here anymore to keep permission active!
+
             gameState.status = 'ANSWER_REVEAL';
             render();
 
@@ -1247,14 +1036,8 @@ The answer should be concise.`;
                                 <input id="p2-name" type="text" value="Játékos 2" class="w-full bg-black/50 border border-gray-700 rounded-lg p-3 text-white focus:border-genius-gold outline-none transition">
                             </div>
                             
-                            <!-- Voice Mode Toggle -->
-                            <div class="flex items-center justify-between bg-black/30 p-4 rounded-lg border border-gray-700">
-                                <span class="text-white font-bold">Hangvezérlés (Kísérleti)</span>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                  <input type="checkbox" id="voice-mode-toggle" class="sr-only peer">
-                                  <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-genius-gold rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-genius-gold"></div>
-                                </label>
-                            </div>
+                            <!-- Voice Mode Toggle REMOVED -->
+                            <!-- Renaming or removing section? keeping it simple -->
 
                             <button onclick="initGame()" class="w-full bg-genius-gold hover:bg-yellow-400 text-black font-black py-4 rounded-lg uppercase tracking-wider text-xl transition transform hover:scale-105 shadow-lg shadow-yellow-500/20">
                                 Játék Indítása
@@ -1363,12 +1146,7 @@ The answer should be concise.`;
                                 </div>
                             ` : ''}
 
-                            <!-- Voice Indicator -->
-                            ${gameState.voiceMode ? `
-                                <div class="absolute bottom-4 right-4">
-                                    <span id="mic-icon" class="text-3xl text-gray-600 transition duration-300">🎤</span>
-                                </div>
-                            ` : ''}
+                            <!-- Voice Indicator REMOVED -->
                         </div>
 
                         <!-- Action Button -->
