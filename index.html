@@ -36,6 +36,7 @@
             overflow: hidden;
             position: relative;
             border-bottom: 2px solid #fdbb2d;
+            transition: all 0.5s ease;
         }
 
         .slot-reel {
@@ -79,14 +80,6 @@
             position: relative;
         }
 
-        .highlight-border::after {
-            content: '';
-            position: absolute;
-            top: -10px; left: -10px; right: -10px; bottom: -10px;
-            border: 1px solid rgba(253, 187, 45, 0.3);
-            pointer-events: none;
-        }
-
         .pulse {
             animation: pulse-animation 2s infinite;
         }
@@ -94,6 +87,34 @@
         @keyframes pulse-animation {
             0% { box-shadow: 0 0 0 0px rgba(253, 187, 45, 0.7); }
             100% { box-shadow: 0 0 0 20px rgba(253, 187, 45, 0); }
+        }
+
+        /* Kiemelt stílus */
+        .featured-slot {
+            background: linear-gradient(90deg, rgba(253, 187, 45, 0.1), rgba(253, 187, 45, 0.3), rgba(253, 187, 45, 0.1));
+            box-shadow: inset 0 0 20px #fdbb2d;
+            transform: scale(1.02);
+            z-index: 10;
+        }
+
+        .featured-tag {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #fdbb2d;
+            color: #000;
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-50%) translateX(10px); }
+            to { opacity: 1; transform: translateY(-50%) translateX(0); }
         }
     </style>
 </head>
@@ -110,20 +131,16 @@
         <div class="genius-card rounded-xl p-8 highlight-border mb-8">
             <div id="reels-container" class="space-y-4">
                 <!-- Reel 1 -->
-                <div class="slot-container bg-gray-900 rounded-lg">
-                    <div id="reel-0" class="slot-reel">
-                        <!-- Items will be injected here -->
-                    </div>
+                <div id="container-0" class="slot-container bg-gray-900 rounded-lg">
+                    <div id="reel-0" class="slot-reel"></div>
                 </div>
                 <!-- Reel 2 -->
-                <div class="slot-container bg-gray-900 rounded-lg">
-                    <div id="reel-1" class="slot-reel">
-                    </div>
+                <div id="container-1" class="slot-container bg-gray-900 rounded-lg">
+                    <div id="reel-1" class="slot-reel"></div>
                 </div>
                 <!-- Reel 3 -->
-                <div class="slot-container bg-gray-900 rounded-lg">
-                    <div id="reel-2" class="slot-reel">
-                    </div>
+                <div id="container-2" class="slot-container bg-gray-900 rounded-lg">
+                    <div id="reel-2" class="slot-reel"></div>
                 </div>
             </div>
         </div>
@@ -137,7 +154,6 @@
         </div>
     </div>
 
-    <!-- Audio Placeholder simulation / Script -->
     <script>
         const categories = [
             "Bulvár",
@@ -158,10 +174,15 @@
             document.getElementById('reel-2')
         ];
         
+        const containers = [
+            document.getElementById('container-0'),
+            document.getElementById('container-1'),
+            document.getElementById('container-2')
+        ];
+        
         const spinButton = document.getElementById('spin-button');
         const statusText = document.getElementById('status-text');
 
-        // Initial populate
         function initReels() {
             reels.forEach(reel => {
                 renderItems(reel, categories[0]);
@@ -169,10 +190,9 @@
         }
 
         function renderItems(reel, selected) {
-            // Create a long list for the scrolling effect
             let html = '';
             // Pre-items for animation buffer
-            for(let i = 0; i < 20; i++) {
+            for(let i = 0; i < 25; i++) {
                 const cat = categories[Math.floor(Math.random() * categories.length)];
                 html += `<div class="category-item">${cat}</div>`;
             }
@@ -186,34 +206,48 @@
             spinButton.classList.remove('pulse');
             statusText.innerText = "Gundel Takács Gábor indítja a pörgetést...";
             
+            // Clear previous highlighting
+            containers.forEach(c => {
+                c.classList.remove('featured-slot');
+                const tag = c.querySelector('.featured-tag');
+                if (tag) tag.remove();
+            });
+
             // Randomly pick 3 distinct categories
             let shuffled = [...categories].sort(() => 0.5 - Math.random());
             let selected = shuffled.slice(0, 3);
+            
+            // Randomly pick one index to be the "featured" one
+            const featuredIndex = Math.floor(Math.random() * 3);
 
             for (let i = 0; i < 3; i++) {
-                // Reset position
                 reels[i].style.transition = 'none';
                 reels[i].style.transform = 'translateY(0)';
-                
-                // Force reflow
-                reels[i].offsetHeight;
+                reels[i].offsetHeight; // Reflow
 
-                // Re-render items with the result at the end
                 renderItems(reels[i], selected[i]);
 
-                // Trigger animation
                 setTimeout(() => {
                     reels[i].style.transition = `transform ${2 + i * 0.5}s cubic-bezier(0.23, 1, 0.32, 1)`;
-                    // Each item is 80px. We have 20 items before the result.
-                    reels[i].style.transform = `translateY(-${20 * 80}px)`;
+                    reels[i].style.transform = `translateY(-${25 * 80}px)`;
                 }, 50);
             }
 
-            // Wait for the last animation to finish
+            // Final highlighting after the last reel stops
             setTimeout(() => {
                 spinButton.disabled = false;
                 spinButton.classList.add('pulse');
-                statusText.innerText = "A kategóriák rögzítve. Kezdődhet a játék!";
+                
+                // Highlight the selected one
+                const targetContainer = containers[featuredIndex];
+                targetContainer.classList.add('featured-slot');
+                
+                const tag = document.createElement('div');
+                tag.className = 'featured-tag';
+                tag.innerText = 'KIEMELT';
+                targetContainer.appendChild(tag);
+
+                statusText.innerText = `A kategóriák rögzítve. Kiemelt témakör: ${selected[featuredIndex]}!`;
             }, 3500);
         }
 
