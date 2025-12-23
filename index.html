@@ -1,1270 +1,224 @@
 <!DOCTYPE html>
 <html lang="hu">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Géniusz Kvíz - Házibajnokság</title>
-    <!-- Tailwind CSS -->
+    <title>Géniusz Témakör Sorsoló</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&display=swap" rel="stylesheet">
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                    },
-                    colors: {
-                        genius: {
-                            gold: '#FFD700',
-                            dark: '#0A0A0A',
-                            panel: '#1A1A1A',
-                            accent: '#3B82F6',
-                        }
-                    },
-                    animation: {
-                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    }
-                }
-            }
-        }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         body {
-            background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
-            color: white;
+            font-family: 'Montserrat', sans-serif;
+            background: radial-gradient(circle, #1a2a6c, #b21f1f, #fdbb2d);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
             min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
         }
 
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .genius-card {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #fdbb2d;
+            box-shadow: 0 0 20px rgba(253, 187, 45, 0.5);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            perspective: 1000px;
+        }
+
+        .slot-container {
+            height: 80px;
+            overflow: hidden;
+            position: relative;
+            border-bottom: 2px solid #fdbb2d;
+        }
+
+        .slot-reel {
+            transition: transform 3s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .category-item {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 1.25rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .btn-genius {
+            background: linear-gradient(to bottom, #fdbb2d, #b21f1f);
+            border: none;
+            color: white;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-genius:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(253, 187, 45, 0.6);
+        }
+
+        .btn-genius:active {
+            transform: scale(0.95);
+        }
+
+        .highlight-border {
+            border: 4px solid #fdbb2d;
+            position: relative;
+        }
+
+        .highlight-border::after {
+            content: '';
+            position: absolute;
+            top: -10px; left: -10px; right: -10px; bottom: -10px;
+            border: 1px solid rgba(253, 187, 45, 0.3);
+            pointer-events: none;
+        }
+
+        .pulse {
+            animation: pulse-animation 2s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% { box-shadow: 0 0 0 0px rgba(253, 187, 45, 0.7); }
+            100% { box-shadow: 0 0 0 20px rgba(253, 187, 45, 0); }
         }
     </style>
 </head>
+<body class="flex items-center justify-center p-4">
 
-<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="max-w-2xl w-full">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-6xl font-black italic tracking-tighter mb-2" style="color: #fdbb2d; text-shadow: 4px 4px 0px #b21f1f;">GÉNIUSZ</h1>
+            <p class="text-lg opacity-80 uppercase tracking-widest font-bold">A tudás hatalom</p>
+        </div>
 
-    <div id="app" class="w-full max-w-5xl">
-        <!-- App Content injected by JS -->
+        <!-- Main Machine Area -->
+        <div class="genius-card rounded-xl p-8 highlight-border mb-8">
+            <div id="reels-container" class="space-y-4">
+                <!-- Reel 1 -->
+                <div class="slot-container bg-gray-900 rounded-lg">
+                    <div id="reel-0" class="slot-reel">
+                        <!-- Items will be injected here -->
+                    </div>
+                </div>
+                <!-- Reel 2 -->
+                <div class="slot-container bg-gray-900 rounded-lg">
+                    <div id="reel-1" class="slot-reel">
+                    </div>
+                </div>
+                <!-- Reel 3 -->
+                <div class="slot-container bg-gray-900 rounded-lg">
+                    <div id="reel-2" class="slot-reel">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex flex-col items-center">
+            <button id="spin-button" class="btn-genius px-12 py-4 rounded-full text-2xl pulse">
+                Témakörök Sorsolása
+            </button>
+            <p id="status-text" class="mt-6 text-sm italic font-medium opacity-70">Készen áll a párbajra?</p>
+        </div>
     </div>
 
-    <!-- Game Logic -->
+    <!-- Audio Placeholder simulation / Script -->
     <script>
-        // --- KONFIGURÁCIÓ ÉS ADATOK ---
-
-        // 10 Témakör, mindegyikhez példa kérdések (A teljes 100-as lista helyett most egy bővített, de kezelhető mennyiséget rakok be demonstrációnak)
-        // A kód úgy van megírva, hogy bármennyi kérdést kezel, véletlenszerűen választva.
-        const TOPICS = [
-            'Tudomány és technika', 'Történelem és közélet', 'Sport', 'Életmód', 'Nyelv és irodalom',
-            'Földrajz', 'Zene', 'Bulvár', 'Élővilág', 'Film és TV'
+        const categories = [
+            "Bulvár",
+            "Életmód",
+            "Élővilág",
+            "Film és TV",
+            "Földrajz",
+            "Nyelv és irodalom",
+            "Sport",
+            "Történelem és közélet",
+            "Tudomány és technika",
+            "Zene"
         ];
 
-        const QUESTION_DB = [
-            // --- Tudomány és technika ---
-            { topic: 'Tudomány és technika', q: 'Mi a hidrogén vegyjele?', a: 'H' },
-            { topic: 'Tudomány és technika', q: 'Melyik bolygót nevezik Vörös Bolygónak?', a: 'Mars' },
-            { topic: 'Tudomány és technika', q: 'Ki találta fel a váltóáramot?', a: 'Nikola Tesla' },
-            { topic: 'Tudomány és technika', q: 'Mi a fény sebessége (kb. km/s)?', a: '300 000 km/s' },
-            { topic: 'Tudomány és technika', q: 'Melyik a legkeményebb természetes ásvány?', a: 'Gyémánt' },
-            { topic: 'Tudomány és technika', q: 'Hány fokon forr a víz normál nyomáson?', a: '100 °C' },
-            { topic: 'Tudomány és technika', q: 'Ki dolgozta ki a relativitáselméletet?', a: 'Albert Einstein' },
-            { topic: 'Tudomány és technika', q: 'Mi a DNS teljes neve?', a: 'Dezoxiribonukleinsav' },
-            { topic: 'Tudomány és technika', q: 'Hány bit egy bájt?', a: '8' },
-            { topic: 'Tudomány és technika', q: 'Melyik elemet jelöli az O vegyjel?', a: 'Oxigén' },
-            { topic: 'Tudomány és technika', q: 'Mi a Naprendszer legnagyobb bolygója?', a: 'Jupiter' },
-            { topic: 'Tudomány és technika', q: 'Milyen töltése van az elektronnak?', a: 'Negatív' },
-            { topic: 'Tudomány és technika', q: 'Ki fedezte fel az antibiotikumot (penicillint)?', a: 'Alexander Fleming' },
-            { topic: 'Tudomány és technika', q: 'Melyik a legkönnyebb nemesgáz?', a: 'Hélium' },
-            { topic: 'Tudomány és technika', q: 'Hány fok a nulla kelvin Celsiusban?', a: '-273,15 °C' },
-            { topic: 'Tudomány és technika', q: 'Mi a "WWW" jelentése?', a: 'World Wide Web' },
-            { topic: 'Tudomány és technika', q: 'Melyik évben lépett ember először a Holdra?', a: '1969' },
-            { topic: 'Tudomány és technika', q: 'Mi a szublimáció?', a: 'Szilárd halmazállapotból gáz lesz' },
-            { topic: 'Tudomány és technika', q: 'Ki a Windows operációs rendszer atyja?', a: 'Bill Gates' },
-            { topic: 'Tudomány és technika', q: 'Melyik bolygónak van a legtöbb holdja?', a: 'Szaturnusz' },
-            { topic: 'Tudomány és technika', q: 'A periódusos rendszer hányadik eleme a szén?', a: '6' },
-            { topic: 'Tudomány és technika', q: 'Mi a hang terjedési sebessége levegőben (kb)?', a: '343 m/s' },
-            { topic: 'Tudomány és technika', q: 'Ki találta fel a dinamitot?', a: 'Alfred Nobel' },
-            { topic: 'Tudomány és technika', q: 'Mi a leggyakoribb elem az Univerzumban?', a: 'Hidrogén' },
-            { topic: 'Tudomány és technika', q: 'Melyik vitamin hiánya okozza a skorbutot?', a: 'C-vitamin' },
-            { topic: 'Tudomány és technika', q: 'Hány fokon fagy a víz?', a: '0 °C' },
-            { topic: 'Tudomány és technika', q: 'Melyik bolygó a legkisebb a Naprendszerben?', a: 'Merkúr' },
-            { topic: 'Tudomány és technika', q: 'Mi a periódusos rendszer vegyjele az aranynak?', a: 'Au' },
-            { topic: 'Tudomány és technika', q: 'Melyik szervünk termeli az epét?', a: 'Máj' },
-            { topic: 'Tudomány és technika', q: 'Ki fedezte fel az elektronokat?', a: 'J.J. Thomson' },
-            { topic: 'Tudomány és technika', q: 'Melyik gáz alkotja a légkör legnagyobb részét?', a: 'Nitrogén' },
-            { topic: 'Tudomány és technika', q: 'Hány bit egy kilobájt (decimálisban)?', a: '1000 (vagy 1024)' },
-            { topic: 'Tudomány és technika', q: 'Mi a gravitációs gyorsulás értéke a Földön (g)?', a: '9,81 m/s²' },
-            { topic: 'Tudomány és technika', q: 'Ki a modern számítógép atyja (Alan..)?', a: 'Alan Turing' },
-            { topic: 'Tudomány és technika', q: 'Mi a fény részecskéje?', a: 'Foton' },
-            { topic: 'Tudomány és technika', q: 'Melyik a legnagyobb sejt az emberi testben?', a: 'Petesejt' },
-            { topic: 'Tudomány és technika', q: 'Ki fedezte fel a rádiumot?', a: 'Marie Curie' },
-            { topic: 'Tudomány és technika', q: 'Hány cm egy inch (hüvelyk)?', a: '2,54' },
-            { topic: 'Tudomány és technika', q: 'Mi az atommag alkotóeleme a proton mellett?', a: 'Neutron' },
-            { topic: 'Tudomány és technika', q: 'Melyik állat szívének van 4 ürege?', a: 'Ember (vagy Madarak/Emlősök)' },
-            { topic: 'Tudomány és technika', q: 'Mi a Wifi teljes neve?', a: 'Wireless Fidelity' },
-            { topic: 'Tudomány és technika', q: 'Melyik a leggyorsabb madár?', a: 'Vándorsólyom' },
-            { topic: 'Tudomány és technika', q: 'Ki találta fel a villanykörtét (sorozatgyártás)?', a: 'Thomas Edison' },
-            { topic: 'Tudomány és technika', q: 'Hány kromoszómája van egy embernek?', a: '46' },
-            { topic: 'Tudomány és technika', q: 'Mi az elektromos ellenállás mértékegysége?', a: 'Ohm' },
-            { topic: 'Tudomány és technika', q: 'Melyik bolygó forog az oldalán?', a: 'Uránusz' },
-            { topic: 'Tudomány és technika', q: 'Mi a legkeményebb mesterséges anyag (közelítés)?', a: 'Grafén (vagy gyémánt)' },
-            { topic: 'Tudomány és technika', q: 'Ki fejtette meg az Enigma-kódot?', a: 'Alan Turing' },
-            { topic: 'Tudomány és technika', q: 'Mi a Google eredeti neve?', a: 'BackRub' },
-            { topic: 'Tudomány és technika', q: 'Melyik évben indult a Facebook?', a: '2004' },
-            { topic: 'Tudomány és technika', q: 'Mi a Mars két holdja?', a: 'Phobos és Deimos' },
-            { topic: 'Tudomány és technika', q: 'Ki az Apple társalapítója Jobs mellett?', a: 'Steve Wozniak' },
-            { topic: 'Tudomány és technika', q: 'Hány watt egy lóerő?', a: '735-746' },
-            { topic: 'Tudomány és technika', q: 'Mi a víz kémiai képlete?', a: 'H2O' },
-            { topic: 'Tudomány és technika', q: 'Ki a Tesla CEO-ja?', a: 'Elon Musk' },
-
-            // --- Történelem és közélet ---
-            { topic: 'Történelem és közélet', q: 'Mikor volt a mohácsi vész?', a: '1526' },
-            { topic: 'Történelem és közélet', q: 'Ki volt az első amerikai elnök?', a: 'George Washington' },
-            { topic: 'Történelem és közélet', q: 'Melyik évben tört ki az 1848-as forradalom?', a: '1848' },
-            { topic: 'Történelem és közélet', q: 'Ki volt Mátyás király apja?', a: 'Hunyadi János' },
-            { topic: 'Történelem és közélet', q: 'Melyik birodalom építette a Colosseumot?', a: 'Római Birodalom' },
-            { topic: 'Történelem és közélet', q: 'Ki volt a "Vaslady"?', a: 'Margaret Thatcher' },
-            { topic: 'Történelem és közélet', q: 'Mikor csatlakozott Magyarország az EU-hoz?', a: '2004' },
-            { topic: 'Történelem és közélet', q: 'Ki az államalapító királyunk?', a: 'Szent István' },
-            { topic: 'Történelem és közélet', q: 'Hol írták alá az I. világháborút lezáró békét?', a: 'Versailles (Trianon)' },
-            { topic: 'Történelem és közélet', q: 'Ki volt Magyarország kormányzója 1920 és 1944 között?', a: 'Horthy Miklós' },
-            { topic: 'Történelem és közélet', q: 'Mikor ért véget a II. világháború Európában?', a: '1945' },
-            { topic: 'Történelem és közélet', q: 'Ki volt az utolsó magyar király?', a: 'IV. Károly' },
-            { topic: 'Történelem és közélet', q: 'Melyik híd volt Budapest első állandó hídja?', a: 'Lánchíd' },
-            { topic: 'Történelem és közélet', q: 'Ki mondta: "A kocka el van vetve"?', a: 'Julius Caesar' },
-            { topic: 'Történelem és közélet', q: 'Melyik évben volt az Aranybulla kiadása?', a: '1222' },
-            { topic: 'Történelem és közélet', q: 'Ki volt Napóleon legnagyobb ellenfele a tengeren?', a: 'Nelson admirális' },
-            { topic: 'Történelem és közélet', q: 'Melyik ország vált ki az EU-ból a Brexit során?', a: 'Egyesült Királyság' },
-            { topic: 'Történelem és közélet', q: 'Ki volt az 1956-os forradalom mártír miniszterelnöke?', a: 'Nagy Imre' },
-            { topic: 'Történelem és közélet', q: 'Melyik városban koronázták a magyar királyokat évszázadokig?', a: 'Székesfehérvár / Pozsony' },
-            { topic: 'Történelem és közélet', q: 'Ki fedezte fel Amerikát 1492-ben?', a: 'Kolumbusz Kristóf' },
-            { topic: 'Történelem és közélet', q: 'Melyik birodalom uralkodója volt Viktória királynő?', a: 'Brit Birodalom' },
-            { topic: 'Történelem és közélet', q: 'Hány évig tartott a török hódoltság Budán?', a: '145' },
-            { topic: 'Történelem és közélet', q: 'Ki volt az USA elnöke a polgárháború alatt?', a: 'Abraham Lincoln' },
-            { topic: 'Történelem és közélet', q: 'Melyik évben kiáltották ki a Magyar Köztársaságot 1989-ben?', a: '1989' },
-            { topic: 'Történelem és közélet', q: 'Ki volt az első magyar király?', a: 'Szent István' },
-            { topic: 'Történelem és közélet', q: 'Mikor írták alá a trianoni békét (hónap, nap)?', a: 'Június 4.' },
-            { topic: 'Történelem és közélet', q: 'Ki volt IV. Béla apja?', a: 'II. András' },
-            { topic: 'Történelem és közélet', q: 'Melyik csatában esett el II. Lajos?', a: 'Mohács' },
-            { topic: 'Történelem és közélet', q: 'Ki volt Batthyány Lajos?', a: 'Első felelős miniszterelnök' },
-            { topic: 'Történelem és közélet', q: 'Melyik évben volt az őszi rózsás forradalom?', a: '1918' },
-            { topic: 'Történelem és közélet', q: 'Ki volt az Egyesült Királyság leghosszabb ideig uralkodó királynője?', a: 'II. Erzsébet' },
-            { topic: 'Történelem és közélet', q: 'Mikor volt a waterlooi csata?', a: '1815' },
-            { topic: 'Történelem és közélet', q: 'Ki volt a Szovjetunió utolsó vezetője?', a: 'Mihail Gorbacsov' },
-            { topic: 'Történelem és közélet', q: 'Melyik évben omlott le a Berlini Fal?', a: '1989' },
-            { topic: 'Történelem és közélet', q: 'Ki volt Ferenc József felesége?', a: 'Sissi (Erzsébet)' },
-            { topic: 'Történelem és közélet', q: 'Melyik ország támadta meg Lengyelországot 1939-ben?', a: 'Németország' },
-            { topic: 'Történelem és közélet', q: 'Ki volt az Egri csillagok várkapitánya (valóságban is)?', a: 'Dobó István' },
-            { topic: 'Történelem és közélet', q: 'Melyik évben koronázták meg Mátyás királyt?', a: '1464 (vagy 1458-ban választották)' },
-            { topic: 'Történelem és közélet', q: 'Ki volt a "legnagyobb magyar"?', a: 'Széchenyi István' },
-            { topic: 'Történelem és közélet', q: 'Melyik város volt Magyarország fővárosa Buda előtt?', a: 'Esztergom / Székesfehérvár' },
-            { topic: 'Történelem és közélet', q: 'Ki volt az USA elnöke a Kennedy-gyilkosság után?', a: 'Lyndon B. Johnson' },
-            { topic: 'Történelem és közélet', q: 'Melyik évben volt a csernobili katasztrófa?', a: '1986' },
-            { topic: 'Történelem és közélet', q: 'Ki volt az első női miniszterelnök az Egyesült Királyságban?', a: 'Margaret Thatcher' },
-            { topic: 'Történelem és közélet', q: 'Mikor volt a D-Day (Normandiai partraszállás)?', a: '1944. június 6.' },
-            { topic: 'Történelem és közélet', q: 'Ki volt Julius Caesar fogadott fia?', a: 'Augustus (Octavianus)' },
-            { topic: 'Történelem és közélet', q: 'Melyik évben lett véget a hidegháború (hivatalosan)?', a: '1991' },
-            { topic: 'Történelem és közélet', q: 'Ki volt a Napkirály?', a: 'XIV. Lajos' },
-            { topic: 'Történelem és közélet', q: 'Melyik országban tört ki a nagy októberi szocialista forradalom?', a: 'Oroszország' },
-            { topic: 'Történelem és közélet', q: 'Ki volt az első űrhajós?', a: 'Jurij Gagarin' },
-            { topic: 'Történelem és közélet', q: 'Melyik évben volt az augusztus 20-i első tűzijáték (újkorban)?', a: 'Variálható, nem releváns' },
-            { topic: 'Történelem és közélet', q: 'Ki volt Kádár János elődje?', a: 'Rákosi Mátyás (vagy Nagy Imre)' },
-            { topic: 'Történelem és közélet', q: 'Mikor csatlakozott Magyarország a NATO-hoz?', a: '1999' },
-            { topic: 'Történelem és közélet', q: 'Ki volt az Amerikai Függetlenségi Nyilatkozat fő szerzője?', a: 'Thomas Jefferson' },
-            { topic: 'Történelem és közélet', q: 'Melyik évben volt a Holdraszállás?', a: '1969' },
-
-            // --- Sport ---
-            { topic: 'Sport', q: 'Hányperces egy focimeccs rendes játékideje?', a: '90 perc' },
-            { topic: 'Sport', q: 'Melyik ország rendezte a 2016-os olimpiát?', a: 'Brazília' },
-            { topic: 'Sport', q: 'Hány lyuk van egy standard golfpályán?', a: '18' },
-            { topic: 'Sport', q: 'Ki minden idők legeredményesebb olimpikonja?', a: 'Michael Phelps' },
-            { topic: 'Sport', q: 'Melyik sportágban használják a "puck" (korong) kifejezést?', a: 'Jégkorong' },
-            { topic: 'Sport', q: 'Hány játékos van egy kosárlabdacsapatban a pályán?', a: '5' },
-            { topic: 'Sport', q: 'Melyik magyar focista nyert Aranylabdát?', a: 'Albert Flórián' },
-            { topic: 'Sport', q: 'Hol rendezték az első modern olimpiát?', a: 'Athén' },
-            { topic: 'Sport', q: 'Hány menetből áll egy profi bokszbajnoki mérkőzés (általában)?', a: '12' },
-            { topic: 'Sport', q: 'Ki a "Nemzet Sportolója" címmel kitüntetett sakkozó?', a: 'Portisch Lajos' },
-            { topic: 'Sport', q: 'Hogyan hívják a teniszben a 0 pontot?', a: 'Semmi (Love)' },
-            { topic: 'Sport', q: 'Melyik ország a szülőhazája a judónak?', a: 'Japán' },
-            { topic: 'Sport', q: 'Hányszoros F1 világbajnok Michael Schumacher?', a: '7' },
-            { topic: 'Sport', q: 'Melyik magyar úszónő nyert 5 aranyérmet olimpiákon?', a: 'Egerszegi Krisztina' },
-            { topic: 'Sport', q: 'Hány játékos alkot egy kézilabda csapatot a pályán?', a: '7' },
-            { topic: 'Sport', q: 'Melyik sportágban vívják a Super Bowl-t?', a: 'Amerikai futball' },
-            { topic: 'Sport', q: 'Ki nyerte az 1954-es foci VB-t Magyarország ellen?', a: 'NSZK (Németország)' },
-            { topic: 'Sport', q: 'Milyen színű a legértékesebb érem az olimpián?', a: 'Arany' },
-            { topic: 'Sport', q: 'Hol van a Wimbledon teniszbajnokság?', a: 'Anglia (London)' },
-            { topic: 'Sport', q: 'Hány tusig tart egy csörte a vívásban (egyéni, direkt kiesés)?', a: '15' },
-            { topic: 'Sport', q: 'Melyik sportág része a "Tour de France"?', a: 'Kerékpározás' },
-            { topic: 'Sport', q: 'Ki a leghíresebb magyar bokszoló (Papp ..)?', a: 'Papp László' },
-            { topic: 'Sport', q: 'Mi a legmagasabb pontszám a bowlingban?', a: '300' },
-            { topic: 'Sport', q: 'Hány karika van az olimpiai zászlón?', a: '5' },
-            { topic: 'Sport', q: 'Melyik ország nyerte a 2018-as foci VB-t?', a: 'Franciaország' },
-            { topic: 'Sport', q: 'Hány játékos van egy vízilabda csapatban a vízben?', a: '7' },
-            { topic: 'Sport', q: 'Ki tartja a 100 méteres síkfutás világrekordját?', a: 'Usain Bolt' },
-            { topic: 'Sport', q: 'Szabó Tünde melyik sportágban volt olimpiai ezüstérmes?', a: 'Úszás' },
-            { topic: 'Sport', q: 'Melyik csapatban játszott Puskás Ferenc Spanyolországban?', a: 'Real Madrid' },
-            { topic: 'Sport', q: 'Hány pontot ér egy touchdown az amerikai fociban?', a: '6' },
-            { topic: 'Sport', q: 'Melyik sportágban használják a "shuttlecock" (tollaslabda) kifejezést?', a: 'Tollaslabda' },
-            { topic: 'Sport', q: 'Ki volt az első magyar olimpiai bajnok?', a: 'Hajós Alfréd' },
-            { topic: 'Sport', q: 'Melyik városban rendezték a 2012-es olimpiát?', a: 'London' },
-            { topic: 'Sport', q: 'Hány bábút kell ledönteni a bowlingban a strike-hoz?', a: '10' },
-            { topic: 'Sport', q: 'Melyik sportág űzője Tiger Woods?', a: 'Golf' },
-            { topic: 'Sport', q: 'Ki a Forma-1 történetének legfiatalabb világbajnoka?', a: 'Sebastian Vettel' },
-            { topic: 'Sport', q: 'Melyik csapat nyerte a legtöbb NBA bajnoki címet (holtverseny)?', a: 'Boston Celtics / LA Lakers' },
-            { topic: 'Sport', q: 'Melyik sportágban van "les"?', a: 'Labdarúgás (Jégkorong)' },
-            { topic: 'Sport', q: 'Hány méter magas a kosárlabda gyűrű?', a: '3,05 m' },
-            { topic: 'Sport', q: 'Ki nyerte a legtöbb Grand Slam tornát férfi teniszben (2024)?', a: 'Novak Djokovic' },
-            { topic: 'Sport', q: 'Melyik ország sportja a krikett?', a: 'Anglia (India, Ausztrália)' },
-            { topic: 'Sport', q: 'Hány játékos van egy röplabda csapatban a pályán?', a: '6' },
-            { topic: 'Sport', q: 'Melyik magyar vívó nyert 3 olimpiai aranyat sorozatban (kard)?', a: 'Szilágyi Áron' },
-            { topic: 'Sport', q: 'Melyik sportágban versenyzett Hosszú Katinka?', a: 'Úszás' },
-            { topic: 'Sport', q: 'Hol van a Camp Nou stadion?', a: 'Barcelona' },
-            { topic: 'Sport', q: 'Melyik sportágban használják a "birdie" kifejezést?', a: 'Golf' },
-            { topic: 'Sport', q: 'Ki volt a "Fekete Párduc" (focikapus)?', a: 'Grosics Gyula' },
-            { topic: 'Sport', q: 'Hány perc egy félidő a kézilabdában?', a: '30' },
-            { topic: 'Sport', q: 'Melyik ország nyerte a legtöbb foci VB-t?', a: 'Brazília' },
-            { topic: 'Sport', q: 'Ki volt Muhammad Ali eredeti neve?', a: 'Cassius Clay' },
-            { topic: 'Sport', q: 'Melyik sportágban van "sárga trikó"?', a: 'Kerékpár' },
-            { topic: 'Sport', q: 'Hány golyó van a snooker asztalon kezdéskor?', a: '22' },
-            { topic: 'Sport', q: 'Ki a leghíresebb kosárlabdázó (MJ)?', a: 'Michael Jordan' },
-            { topic: 'Sport', q: 'Melyik sportágat űzik a tatamin?', a: 'Judo / Karate' },
-
-            // --- Földrajz ---
-            { topic: 'Földrajz', q: 'Melyik a Föld legnagyobb kontinense?', a: 'Ázsia' },
-            { topic: 'Földrajz', q: 'Melyik folyó folyik át Budapesten?', a: 'Duna' },
-            { topic: 'Földrajz', q: 'Mi Franciaország fővárosa?', a: 'Párizs' },
-            { topic: 'Földrajz', q: 'Melyik a legnagyobb óceán?', a: 'Csendes-óceán' },
-            { topic: 'Földrajz', q: 'Melyik ország alakja hasonlít egy csizmára?', a: 'Olaszország' },
-            { topic: 'Földrajz', q: 'Melyik a Balaton legnagyobb városa?', a: 'Siófok' },
-            { topic: 'Földrajz', q: 'Mi Japán fővárosa?', a: 'Tokió' },
-            { topic: 'Földrajz', q: 'Melyik a Föld legnépesebb országa (2023-ban)?', a: 'India' },
-            { topic: 'Földrajz', q: 'Melyik hegységben található a Kékes?', a: 'Mátra' },
-            { topic: 'Földrajz', q: 'Mi az USA fővárosa?', a: 'Washington D.C.' },
-            { topic: 'Földrajz', q: 'Melyik folyó a leghosszabb a Földön (vitatott, de általában)?', a: 'Nílus / Amazonas' },
-            { topic: 'Földrajz', q: 'Melyik kontinensen van a Szahara?', a: 'Afrika' },
-            { topic: 'Földrajz', q: 'Mi Ausztria fővárosa?', a: 'Bécs' },
-            { topic: 'Földrajz', q: 'Melyik tenger határolja Horvátországot?', a: 'Adriai-tenger' },
-            { topic: 'Földrajz', q: 'Melyik a legnagyobb területű ország?', a: 'Oroszország' },
-            { topic: 'Földrajz', q: 'Hol található a Niagara-vízesés?', a: 'USA / Kanada határa' },
-            { topic: 'Földrajz', q: 'Melyik városban van a Colosseum?', a: 'Róma' },
-            { topic: 'Földrajz', q: 'Melyik a Föld legmélyebb pontja?', a: 'Mariana-árok' },
-            { topic: 'Földrajz', q: 'Melyik magyar megyeszékhely a "hírös város"?', a: 'Kecskemét' },
-            { topic: 'Földrajz', q: 'Hány megyéje van Magyarországnak?', a: '19' },
-            { topic: 'Földrajz', q: 'Melyik a világ legkisebb független állama?', a: 'Vatikán' },
-            { topic: 'Földrajz', q: 'Hol található a Machu Picchu?', a: 'Peru' },
-            { topic: 'Földrajz', q: 'Melyik folyó folyik át Londonon?', a: 'Temze' },
-            { topic: 'Földrajz', q: 'Melyik sivatag található Kínában?', a: 'Góbi' },
-            { topic: 'Földrajz', q: 'Melyik ország fővárosa Stockholm?', a: 'Svédország' },
-            { topic: 'Földrajz', q: 'Melyik a leghosszabb folyó Európában?', a: 'Volga' },
-            { topic: 'Földrajz', q: 'Melyik kontinensen van az Antarktisz?', a: 'Antarktisz' },
-            { topic: 'Földrajz', q: 'Melyik országban található a Taj Mahal?', a: 'India' },
-            { topic: 'Földrajz', q: 'Mi Kanada fővárosa?', a: 'Ottawa' },
-            { topic: 'Földrajz', q: 'Melyik tengerbe ömlik a Duna?', a: 'Fekete-tenger' },
-            { topic: 'Földrajz', q: 'Melyik a legnagyobb területű tó Magyarországon?', a: 'Balaton' },
-            { topic: 'Földrajz', q: 'Hol található a Mount Everest?', a: 'Nepál / Kína határa' },
-            { topic: 'Földrajz', q: 'Melyik a legészakibb balti állam?', a: 'Észtország' },
-            { topic: 'Földrajz', q: 'Mi Spanyolország fővárosa?', a: 'Madrid' },
-            { topic: 'Földrajz', q: 'Melyik folyó folyik át Kairón?', a: 'Nílus' },
-            { topic: 'Földrajz', q: 'Hány kerülete van Budapestnek?', a: '23' },
-            { topic: 'Földrajz', q: 'Melyik ország zászlaja az Union Jack?', a: 'Egyesült Királyság' },
-            { topic: 'Földrajz', q: 'Melyik a világ legmagasabb vízesése?', a: 'Angel-vízesés' },
-            { topic: 'Földrajz', q: 'Melyik kontinensen van Brazília?', a: 'Dél-Amerika' },
-            { topic: 'Földrajz', q: 'Mi Olaszország fővárosa?', a: 'Róma' },
-            { topic: 'Földrajz', q: 'Melyik a legkisebb kontinens?', a: 'Ausztrália' },
-            { topic: 'Földrajz', q: 'Hol van a Stonehenge?', a: 'Anglia' },
-            { topic: 'Földrajz', q: 'Melyik országot nevezik a Felkelő Nap országának?', a: 'Japán' },
-            { topic: 'Földrajz', q: 'Melyik a legnagyobb magyarországi nemzeti park?', a: 'Hortobágyi' },
-            { topic: 'Földrajz', q: 'Melyik óceánban van Hawaii?', a: 'Csendes-óceán' },
-            { topic: 'Földrajz', q: 'Mi Németország fővárosa?', a: 'Berlin' },
-            { topic: 'Földrajz', q: 'Melyik a Föld legszárazabb sivatagja?', a: 'Atacama' },
-            { topic: 'Földrajz', q: 'Melyik ország határos Magyarországgal délen?', a: 'Szerbia / Horvátország / Szlovénia' },
-            { topic: 'Földrajz', q: 'Mi Egyiptom fővárosa?', a: 'Kairó' },
-            { topic: 'Földrajz', q: 'Melyik hegység választja el Európát Ázsiától?', a: 'Urál' },
-            { topic: 'Földrajz', q: 'Melyik a legnépesebb város az USA-ban?', a: 'New York' },
-            { topic: 'Földrajz', q: 'Melyik tengerpartja van Lengyelországnak?', a: 'Balti-tenger' },
-            { topic: 'Földrajz', q: 'Hol található a Tiltott Város?', a: 'Peking (Kína)' },
-            { topic: 'Földrajz', q: 'Melyik ország fővárosa Varsó?', a: 'Lengyelország' },
-
-            // --- Film és TV ---
-            { topic: 'Film és TV', q: 'Ki rendezte a Csillagok háborúját?', a: 'George Lucas' },
-            { topic: 'Film és TV', q: 'Melyik sorozatban szerepel "Jockey Ewing"?', a: 'Dallas' },
-            { topic: 'Film és TV', q: 'Ki játszotta Joker-t a Sötét Lovagban?', a: 'Heath Ledger' },
-            { topic: 'Film és TV', q: 'Mi a neve Shrek feleségének?', a: 'Fiona' },
-            { topic: 'Film és TV', q: 'Melyik évben mutatták be a Titanicot?', a: '1997' },
-            { topic: 'Film és TV', q: 'Ki a Barátok közt Berényi Miklósa?', a: 'Szőke Zoltán' },
-            { topic: 'Film és TV', q: 'Melyik film kapta a legtöbb Oscar-díjat (egyik)?', a: 'Titanic' },
-            { topic: 'Film és TV', q: 'Ki a Sárkányok anyja a Trónok harcában?', a: 'Daenerys Targaryen' },
-            { topic: 'Film és TV', q: 'Melyik színész alakította Vasembert?', a: 'Robert Downey Jr.' },
-            { topic: 'Film és TV', q: 'Mi a címe az első magyar hangosfilmnek?', a: 'Hyppolit, a lakáj' },
-            { topic: 'Film és TV', q: 'Ki rendezte a Terminátort?', a: 'James Cameron' },
-            { topic: 'Film és TV', q: 'Melyik színész játszotta Forrest Gumpot?', a: 'Tom Hanks' },
-            { topic: 'Film és TV', q: 'Hogy hívják a Jóbarátok paleontológusát?', a: 'Ross Geller' },
-            { topic: 'Film és TV', q: 'Melyik filmben szerepel Darth Vader?', a: 'Star Wars' },
-            { topic: 'Film és TV', q: 'Ki a főszereplője a Mission: Impossible filmeknek?', a: 'Tom Cruise' },
-            { topic: 'Film és TV', q: 'Melyik rajzfilmfigurának nő meg az orra, ha hazudik?', a: 'Pinokkió' },
-            { topic: 'Film és TV', q: 'Melyik magyar film nyert Oscart 2016-ban?', a: 'Saul fia' },
-            { topic: 'Film és TV', q: 'Ki alakította Jamest Bondot a Skyfallban?', a: 'Daniel Craig' },
-            { topic: 'Film és TV', q: 'Melyik sorozat játszódik Westerosban?', a: 'Trónok harca' },
-            { topic: 'Film és TV', q: 'Ki a Simpson család apukája?', a: 'Homer' },
-            { topic: 'Film és TV', q: 'Melyik állat a főhőse a L\'ecsó című filmnek?', a: 'Patkány' },
-            { topic: 'Film és TV', q: 'Melyik színésznő játszotta a Micsoda nőt?', a: 'Julia Roberts' },
-            { topic: 'Film és TV', q: 'Hány része van a Gyűrűk Ura filmtrilógiának?', a: '3' },
-            { topic: 'Film és TV', q: 'Ki a rendezője a Ponyvaregénynek?', a: 'Quentin Tarantino' },
-            { topic: 'Film és TV', q: 'Melyik filmben hangzik el: "I will be back"?', a: 'Terminátor' },
-            { topic: 'Film és TV', q: 'Ki a rendezője a Jurassic Parknak?', a: 'Steven Spielberg' },
-            { topic: 'Film és TV', q: 'Melyik színész alakítja "Jack Sparrow"-t?', a: 'Johnny Depp' },
-            { topic: 'Film és TV', q: 'Melyik rajzfilmben szerepel "Mufasa"?', a: 'Oroszlánkirály' },
-            { topic: 'Film és TV', q: 'Ki a Pókember igazi neve?', a: 'Peter Parker' },
-            { topic: 'Film és TV', q: 'Hány Oscart nyert a Gyűrűk Ura: A Király visszatér?', a: '11' },
-            { topic: 'Film és TV', q: 'Melyik sorozat főszereplője Walter White?', a: 'Breaking Bad (Totál Szívás)' },
-            { topic: 'Film és TV', q: 'Ki a Mátrix főhőse?', a: 'Neo' },
-            { topic: 'Film és TV', q: 'Melyik színésznő játszotta "Katniss Everdeen"-t?', a: 'Jennifer Lawrence' },
-            { topic: 'Film és TV', q: 'Ki írta a Harry Potter filmek alapjául szolgáló könyveket?', a: 'J.K. Rowling' },
-            { topic: 'Film és TV', q: 'Melyik film főszereplője egy bohóchal?', a: 'Némó nyomában' },
-            { topic: 'Film és TV', q: 'Ki a "Keresztapa"?', a: 'Don Vito Corleone (Marlon Brando)' },
-            { topic: 'Film és TV', q: 'Melyik színész halt meg a Halálos Iramban forgatása alatt?', a: 'Paul Walker' },
-            { topic: 'Film és TV', q: 'Melyik sorozatban van a "Winter is Coming" mondás?', a: 'Trónok harca' },
-            { topic: 'Film és TV', q: 'Ki rendezte az Avatart?', a: 'James Cameron' },
-            { topic: 'Film és TV', q: 'Melyik film nyerte az első "Legjobb animációs film" Oscart?', a: 'Shrek' },
-            { topic: 'Film és TV', q: 'Ki a "Fekete Özvegy" a Marvel filmekben?', a: 'Scarlett Johansson' },
-            { topic: 'Film és TV', q: 'Melyik évben mutatták be az első Star Wars filmet?', a: '1977' },
-            { topic: 'Film és TV', q: 'Ki a "Szex és New York" főszereplője?', a: 'Carrie Bradshaw (SJP)' },
-            { topic: 'Film és TV', q: 'Melyik színész játszotta "Dr. House"-t?', a: 'Hugh Laurie' },
-            { topic: 'Film és TV', q: 'Melyik filmben szerepel "E.T."?', a: 'E.T., a földönkívüli' },
-            { topic: 'Film és TV', q: 'Ki a rendezője az Eredetnek (Inception)?', a: 'Christopher Nolan' },
-            { topic: 'Film és TV', q: 'Melyik színész nyert Oscart a Jokerért (2019)?', a: 'Joaquin Phoenix' },
-            { topic: 'Film és TV', q: 'Ki a főszereplője a Die Hard filmeknek?', a: 'Bruce Willis' },
-            { topic: 'Film és TV', q: 'Melyik filmben hangzik el: "Én vagyok az apád"?', a: 'Star Wars V. (A Birodalom visszavág)' },
-            { topic: 'Film és TV', q: 'Ki játszotta "Hermione Granger"-t?', a: 'Emma Watson' },
-            { topic: 'Film és TV', q: 'Mi Batman igazi neve?', a: 'Bruce Wayne' },
-            { topic: 'Film és TV', q: 'Melyik magyar film nyert Oscart a Mephistóval?', a: 'Mephisto (Szabó István)' },
-            { topic: 'Film és TV', q: 'Ki a hangja a szamárnak a Shrekben (eredeti)?', a: 'Eddie Murphy' },
-            { topic: 'Film és TV', q: 'Melyik filmben van a "Na\'vi" nép?', a: 'Avatar' },
-
-            // --- Zene ---
-            { topic: 'Zene', q: 'Hány húrja van egy klasszikus gitárnak?', a: '6' },
-            { topic: 'Zene', q: 'Ki a "Pop Királya"?', a: 'Michael Jackson' },
-            { topic: 'Zene', q: 'Melyik együttes tagja volt Freddie Mercury?', a: 'Queen' },
-            { topic: 'Zene', q: 'Ki írta a Himnusz zenéjét?', a: 'Erkel Ferenc' },
-            { topic: 'Zene', q: 'Melyik hangszeren játszott Mozart?', a: 'Zongora' },
-            { topic: 'Zene', q: 'Ki énekelte a "Rehab" című dalt?', a: 'Amy Winehouse' },
-            { topic: 'Zene', q: 'Melyik magyar zenekar slágere a "Gyöngyhajú lány"?', a: 'Omega' },
-            { topic: 'Zene', q: 'Hány tagja van a Beatlesnek?', a: '4' },
-            { topic: 'Zene', q: 'Melyik énekesnő "fanatikusai" a Little Monsters?', a: 'Lady Gaga' },
-            { topic: 'Zene', q: 'Mi a legnagyobb mélyvonós hangszer?', a: 'Nagybőgő' },
-            { topic: 'Zene', q: 'Melyik hangszernek van billentyűzete?', a: 'Zongora' },
-            { topic: 'Zene', q: 'Ki énekelte a "Hello" című slágert 2015-ben?', a: 'Adele' },
-            { topic: 'Zene', q: 'Melyik városban születtek a Beatles tagjai?', a: 'Liverpool' },
-            { topic: 'Zene', q: 'Ki volt a "Rock and Roll királya"?', a: 'Elvis Presley' },
-            { topic: 'Zene', q: 'Hány vonalra írják a kottát?', a: '5' },
-            { topic: 'Zene', q: 'Ki a szerzője a 9. szimfóniának (Örömóda)?', a: 'Beethoven' },
-            { topic: 'Zene', q: 'Melyik hangszer tartozik a rézfúvósok közé: Trombita vagy Hegedű?', a: 'Trombita' },
-            { topic: 'Zene', q: 'Ki a Tankcsapda énekese?', a: 'Lukács László' },
-            { topic: 'Zene', q: 'Melyik évtizedben volt a Woodstock fesztivál?', a: '60-as évek (1969)' },
-            { topic: 'Zene', q: 'Ki énekelte a "My Heart Will Go On"-t?', a: 'Céline Dion' },
-            { topic: 'Zene', q: 'Mi a legmagasabb női énekhang?', a: 'Szoprán' },
-            { topic: 'Zene', q: 'Ki a U2 énekese?', a: 'Bono' },
-            { topic: 'Zene', q: 'Melyik magyar zeneszerző gyűjtött népdalokat Kodállyal?', a: 'Bartók Béla' },
-            { topic: 'Zene', q: 'Melyik hangszeren játszik Santana?', a: 'Gitár' },
-            { topic: 'Zene', q: 'Melyik hangszer a jazz "lelke" (gyakran)?', a: 'Szaxofon' },
-            { topic: 'Zene', q: 'Ki énekelte a "Thriller"-t?', a: 'Michael Jackson' },
-            { topic: 'Zene', q: 'Hány billentyű van egy zongorán (általában)?', a: '88' },
-            { topic: 'Zene', q: 'Melyik magyar banda slágere a "Petróleumlámpa"?', a: 'Omega' },
-            { topic: 'Zene', q: 'Ki volt a Nirvana énekese?', a: 'Kurt Cobain' },
-            { topic: 'Zene', q: 'Melyik hangszeren játszik Ringo Starr?', a: 'Dob' },
-            { topic: 'Zene', q: 'Ki a "Material Girl"?', a: 'Madonna' },
-            { topic: 'Zene', q: 'Melyik évben halt meg Elvis Presley?', a: '1977' },
-            { topic: 'Zene', q: 'Ki énekelte a "Bohemian Rhapsody"-t?', a: 'Freddie Mercury (Queen)' },
-            { topic: 'Zene', q: 'Melyik zeneszerző süketült meg?', a: 'Beethoven' },
-            { topic: 'Zene', q: 'Mi a legmélyebb férfi énekhang?', a: 'Basszus' },
-            { topic: 'Zene', q: 'Melyik város a jazz szülőhazája?', a: 'New Orleans' },
-            { topic: 'Zene', q: 'Ki a "Shape of You" előadója?', a: 'Ed Sheeran' },
-            { topic: 'Zene', q: 'Melyik hangszeren játszott Jimi Hendrix?', a: 'Gitár' },
-            { topic: 'Zene', q: 'Hány tagja volt az ABBA-nak?', a: '4' },
-            { topic: 'Zene', q: 'Ki énekelte a "Rolling in the Deep"-et?', a: 'Adele' },
-            { topic: 'Zene', q: 'Melyik magyar énekesnő nyerte a Dal 2013-at (Kedvesem)?', a: 'Nem énekesnő, ByeAlex (Férfi)' },
-            { topic: 'Zene', q: 'Ki a Halott Pénz énekese (egyik)?', a: 'Marsalkó Dávid / Járai Márk' },
-            { topic: 'Zene', q: 'Melyik hangszer vonós?', a: 'Hegedű / Cselló' },
-            { topic: 'Zene', q: 'Ki a "Rocket Man"?', a: 'Elton John' },
-            { topic: 'Zene', q: 'Melyik évtizedben volt népszerű a disco stílus?', a: '70-es évek' },
-            { topic: 'Zene', q: 'Ki a szerzője a "Négy évszak"-nak?', a: 'Vivaldi' },
-            { topic: 'Zene', q: 'Melyik hangszeren játszott Louis Armstrong?', a: 'Trombita' },
-            { topic: 'Zene', q: 'Ki a legismertebb reggae zenész?', a: 'Bob Marley' },
-            { topic: 'Zene', q: 'Hány húrja van a hegedűnek?', a: '4' },
-            { topic: 'Zene', q: 'Melyik magyar együttes slágere az "Álomhajó"?', a: 'Carpe Diem' },
-            { topic: 'Zene', q: 'Ki énekelte a "I Will Always Love You"-t (Film)?', a: 'Whitney Houston' },
-            { topic: 'Zene', q: 'Melyik hangszeren játszanak vonóval?', a: 'Hegedű / Cselló / Brácsa' },
-            { topic: 'Zene', q: 'Ki a Rolling Stones énekese?', a: 'Mick Jagger' },
-            { topic: 'Zene', q: 'Melyik az a hangszer, amit fújni kell és billentyűs?', a: 'Melodika / Orgona (síp)' },
-
-            // --- Életmód ---
-            { topic: 'Életmód', q: 'Melyik vitamin képződik napfény hatására?', a: 'D-vitamin' },
-            { topic: 'Életmód', q: 'Hány foga van egy felnőtt embernek (bölcsességfogakkal)?', a: '32' },
-            { topic: 'Életmód', q: 'Mi a cappuccino fő összetevője a kávén kívül?', a: 'Tejhab' },
-            { topic: 'Életmód', q: 'Melyik a legegészségesebbnek tartott étolaj?', a: 'Olívaolaj' },
-            { topic: 'Életmód', q: 'Hány lépést ajánlanak naponta az egészség megőrzéséhez?', a: '10 000' },
-            { topic: 'Életmód', q: 'Melyik szervünk termeli az inzulint?', a: 'Hasnyálmirigy' },
-            { topic: 'Életmód', q: 'Mi a BMI rövidítés jelentése?', a: 'Testtömeg-index' },
-            { topic: 'Életmód', q: 'Melyik vitamin vízben oldódó?', a: 'C-vitamin' },
-            { topic: 'Életmód', q: 'Melyik ország konyhája a sushi?', a: 'Japán' },
-            { topic: 'Életmód', q: 'Mi a leggyakoribb vércsoport Magyarországon?', a: 'A' },
-            { topic: 'Életmód', q: 'Melyik a legnagyobb emberi szerv?', a: 'Bőr' },
-            { topic: 'Életmód', q: 'Hány óra alvás ajánlott egy felnőttnek?', a: '7-9' },
-            { topic: 'Életmód', q: 'Mi a vegán táplálkozás lényege?', a: 'Semmi állati eredetű' },
-            { topic: 'Életmód', q: 'Melyik ital alapanyaga a komló?', a: 'Sör' },
-            { topic: 'Életmód', q: 'Miből készül a tofu?', a: 'Szójabab' },
-            { topic: 'Életmód', q: 'Mit mérnek a higanymilliméterben vérnyomásnál?', a: 'Nyomást' },
-            { topic: 'Életmód', q: 'Melyik fűszer a legdrágább a világon?', a: 'Sáfrány' },
-            { topic: 'Életmód', q: 'Melyik a borászat istene a római mitológiában?', a: 'Bacchus' },
-            { topic: 'Életmód', q: 'Melyik a legismertebb magyar vörösborfajta Egerből?', a: 'Egri Bikavér' },
-            { topic: 'Életmód', q: 'Melyik vitamin fontos a látáshoz?', a: 'A-vitamin' },
-            { topic: 'Életmód', q: 'Mi a jóga származási országa?', a: 'India' },
-            { topic: 'Életmód', q: 'Hány kalória (kcal) van kb. 1 liter vízben?', a: '0' },
-            { topic: 'Életmód', q: 'Mi a lecsó fő alapanyaga a paprika és paradicsom mellett?', a: 'Hagyma' },
-            { topic: 'Életmód', q: 'Melyik a legerősebb csont az emberi testben?', a: 'Combcsont' },
-            { topic: 'Életmód', q: 'Melyik vitamin zsírban oldódó?', a: 'A, D, E, K' },
-            { topic: 'Életmód', q: 'Hány liter vér van egy felnőtt emberben (átlag)?', a: '5' },
-            { topic: 'Életmód', q: 'Melyik étel a "pizza" szülőhazája?', a: 'Olaszország' },
-            { topic: 'Életmód', q: 'Mi a glutén magyar neve?', a: 'Sikér' },
-            { topic: 'Életmód', q: 'Melyik a legnépszerűbb tea fajta Kínában?', a: 'Zöld tea' },
-            { topic: 'Életmód', q: 'Hány tejfogunk van?', a: '20' },
-            { topic: 'Életmód', q: 'Melyik a "boldogsághormon"?', a: 'Szerotonin / Dopamin' },
-            { topic: 'Életmód', q: 'Melyik országban isszák a legtöbb kávét (egy főre)?', a: 'Finnország' },
-            { topic: 'Életmód', q: 'Mi a "paleo" diéta alapja?', a: 'Őskori táplálkozás' },
-            { topic: 'Életmód', q: 'Melyik szerv tisztítja a vért?', a: 'Vese' },
-            { topic: 'Életmód', q: 'Hány csont van az emberi testben (felnőtt)?', a: '206' },
-            { topic: 'Életmód', q: 'Melyik vitamin hiánya okozhat farkasvakságot?', a: 'A-vitamin' },
-            { topic: 'Életmód', q: 'Mi a sör legfőbb gabona-alapanyaga?', a: 'Árpa' },
-            { topic: 'Életmód', q: 'Melyik fűszernövény a "magyar konyha lelke"?', a: 'Fűszerpaprika' },
-            { topic: 'Életmód', q: 'Mi a guacamole fő összetevője?', a: 'Avokádó' },
-            { topic: 'Életmód', q: 'Mennyi az ideális vérnyomás?', a: '120/80' },
-            { topic: 'Életmód', q: 'Melyik a legfontosabb étkezés a mondás szerint?', a: 'Reggeli' },
-            { topic: 'Életmód', q: 'Melyik szervünk a legnagyobb belső szerv?', a: 'Máj' },
-            { topic: 'Életmód', q: 'Honnan származik a burgonya?', a: 'Dél-Amerika' },
-            { topic: 'Életmód', q: 'Melyik a legtöbbet termelt gyümölcs a világon?', a: 'Paradicsom (botanikailag)' },
-            { topic: 'Életmód', q: 'Mi a pezsgő feltalálásának legendás helyszíne (francia)?', a: 'Champagne' },
-            { topic: 'Életmód', q: 'Melyik a legkeményebb anyag a testünkben?', a: 'Fogzománc' },
-            { topic: 'Életmód', q: 'Mi a laktóz?', a: 'Tejcukor' },
-            { topic: 'Életmód', q: 'Melyik vitamin a "napfényvitamin"?', a: 'D-vitamin' },
-            { topic: 'Életmód', q: 'Hány izom van az emberi testben (kb)?', a: 'Több mint 600' },
-            { topic: 'Életmód', q: 'Melyik a leghosszabb szakasz az emésztőrendszerben?', a: 'Vékonybél' },
-            { topic: 'Életmód', q: 'Mi a rizottó alapja?', a: 'Rizs' },
-            { topic: 'Életmód', q: 'Melyik ország híres a csokoládéjáról (Svájc mellett)?', a: 'Belgium' },
-            { topic: 'Életmód', q: 'Mi a "kardio" lényege?', a: 'Szív és érrendszer edzése' },
-            { topic: 'Életmód', q: 'Melyik a legnépszerűbb szeszesital Oroszországban?', a: 'Vodka' },
-
-            // --- Nyelv és irodalom ---
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a Pál utcai fiúkat?', a: 'Molnár Ferenc' },
-            { topic: 'Nyelv és irodalom', q: 'Ki a magyar himnusz szerzője?', a: 'Kölcsey Ferenc' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik költőnk halt meg Segesvárnál?', a: 'Petőfi Sándor' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a Rómeó és Júliát?', a: 'William Shakespeare' },
-            { topic: 'Nyelv és irodalom', q: 'Hányadik évében írta József Attila a Születésnapomra c. verset?', a: '32' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik a leghosszabb magyar összetett szó (vicces)?', a: 'Megszentségteleníthetetlenségeskedéseitekért' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a Harry Potter könyveket?', a: 'J.K. Rowling' },
-            { topic: 'Nyelv és irodalom', q: 'Mi az irodalmi Nobel-díj?', a: 'Legmagasabb irodalmi kitüntetés' },
-            { topic: 'Nyelv és irodalom', q: 'Ki a Toldi írója?', a: 'Arany János' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik nyelvből ered a magyar nyelv?', a: 'Finnugor' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a Bánk bánt?', a: 'Katona József' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik írónk "nagy palóc"?', a: 'Mikszáth Kálmán' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta az "Egri csillagok"-at?', a: 'Gárdonyi Géza' },
-            { topic: 'Nyelv és irodalom', q: 'Hogy hívják Petőfi Sándor feleségét?', a: 'Szendrey Júlia' },
-            { topic: 'Nyelv és irodalom', q: 'Mi a haiku?', a: 'Japán versforma' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a "Kincskereső kisködmön"-t?', a: 'Móra Ferenc' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik nyelvcsaládba tartozik az angol?', a: 'Germán' },
-            { topic: 'Nyelv és irodalom', q: 'Hány betűből áll a magyar ábécé (kiterjesztett)?', a: '44' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a "Nyomorultak"-at?', a: 'Victor Hugo' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik a világ legolvasottabb könyve?', a: 'Biblia' },
-            { topic: 'Nyelv és irodalom', q: 'Ki a Csongor és Tünde szerzője?', a: 'Vörösmarty Mihály' },
-            { topic: 'Nyelv és irodalom', q: 'Mit jelent a "szonett"?', a: 'Versforma (14 soros)' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a Gyűrűk Urát?', a: 'J.R.R. Tolkien' },
-            { topic: 'Nyelv és irodalom', q: 'Ki volt Ady Endre múzsája (Léda)?', a: 'Brüll Adél' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a "Kölcsey Ferenc" Himnuszát (vicces kérdés, de a válasz Kölcsey)?', a: 'Kölcsey Ferenc' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik író álneve volt P. Howard?', a: 'Rejtő Jenő' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta az "Ember tragédiáját"?', a: 'Madách Imre' },
-            { topic: 'Nyelv és irodalom', q: 'Ki a címszereplője a "Légy jó mindhalálig" c. regénynek?', a: 'Nyilas Misi' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik költőnk írta a "Mama" c. verset?', a: 'József Attila' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a "Micimackó"-t?', a: 'A.A. Milne' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik a legrövidebb magyar névelő?', a: 'A' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta az "Ábel a rengetegben" trilógiát?', a: 'Tamási Áron' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik regény kezdődik így: "Az egyik 13-án a másik..." (Piszkos Fred)?', a: 'Piszkos Fred, a kapitány' },
-            { topic: 'Nyelv és irodalom', q: 'Ki a magyar "mese apó"?', a: 'Benedek Elek' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a "Vuk"-ot?', a: 'Fekete István' },
-            { topic: 'Nyelv és irodalom', q: 'Hány soros a Himnusz?', a: '8 versszak' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik drámaíró a Vízöntő?', a: 'Nem releváns (Shakespeare?)' },
-            { topic: 'Nyelv és irodalom', q: 'Ki fordította magyarra a Micimackót (Karenthyné)?', a: 'Karinthy Frigyes (Emília)' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik költőnk élt Nagyszalontán?', a: 'Arany János' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta az Odüsszeiát?', a: 'Homérosz' },
-            { topic: 'Nyelv és irodalom', q: 'Mi a metafora?', a: 'Képes beszéd (azonosítás)' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a "Tüskevár"-at?', a: 'Fekete István' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik betű nincs a magyar ábécében: Q, W, X?', a: 'Nincs benne az alapban (csak kiterjesztett)' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a "Don Quijote"-t?', a: 'Cervantes' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik állatról írt verset Petőfi (A ....hez)?', a: 'Kutya (Négyökrös szekér?) - Nem, "Anyám tyúkja"' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a Szaffit?', a: 'Jókai Mór (Cigánybáró)' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik költőnk követett el öngyilkosságot Szárszón?', a: 'József Attila' },
-            { topic: 'Nyelv és irodalom', q: 'Ki a Kis herceg írója?', a: 'Antoine de Saint-Exupéry' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik műben szerepel Baradlay Richárd?', a: 'A kőszívű ember fiai' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a "Szigeti veszedelmet"?', a: 'Zrínyi Miklós' },
-            { topic: 'Nyelv és irodalom', q: 'Hány magánhangzó van a magyar nyelvben (hosszú/rövid)?', a: '14' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a "Légy jó mindhalálig"-ot (ismétlés)?', a: 'Móricz Zsigmond' },
-            { topic: 'Nyelv és irodalom', q: 'Melyik költőnk felesége volt Csinszka?', a: 'Ady Endre' },
-            { topic: 'Nyelv és irodalom', q: 'Ki írta a Grimm meséket?', a: 'Grimm testvérek' },
-
-            // --- Bulvár ---
-            { topic: 'Bulvár', q: 'Ki Harry herceg felesége?', a: 'Meghan Markle' },
-            { topic: 'Bulvár', q: 'Melyik valóságshowban szerepelt Gáspár Győző?', a: 'Győzike Show' },
-            { topic: 'Bulvár', q: 'Ki volt Brad Pitt felesége Jennifer Aniston előtt/után?', a: 'Angelina Jolie' },
-            { topic: 'Bulvár', q: 'Melyik a Kardashian család leghíresebb tagja?', a: 'Kim Kardashian' },
-            { topic: 'Bulvár', q: 'Ki nyerte az első magyar Megasztárt?', a: 'Tóth Vera' },
-            { topic: 'Bulvár', q: 'Kinek a párja volt sokáig Bochkor Gábor?', a: 'Várkonyi Andrea' },
-            { topic: 'Bulvár', q: 'Melyik énekesnő "tetovált lány"?', a: 'Tóth Gabi' },
-            { topic: 'Bulvár', q: 'Ki vezette a Mónika Show-t?', a: 'Erdélyi Mónika' },
-            { topic: 'Bulvár', q: 'Melyik magyar modell Palvin Barbara férje?', a: 'Dylan Sprouse' },
-            { topic: 'Bulvár', q: 'Kinek a beceneve "The Rock"?', a: 'Dwayne Johnson' },
-            { topic: 'Bulvár', q: 'Melyik közösségi oldalt alapította Mark Zuckerberg?', a: 'Facebook' },
-            { topic: 'Bulvár', q: 'Ki a leggazdagabb magyar (gyakran)?', a: 'Csányi Sándor / Mészáros Lőrinc' },
-            { topic: 'Bulvár', q: 'Melyik színész pereskedett Amber Hearddel?', a: 'Johnny Depp' },
-            { topic: 'Bulvár', q: 'Ki volt Diana hercegnő férje?', a: 'Károly herceg' },
-            { topic: 'Bulvár', q: 'Melyik platformon lettek híresek a TikTokkerek?', a: 'TikTok' },
-            { topic: 'Bulvár', q: 'Ki a Fidesz legismertebb szóvivője volt régen (Deutsch)?', a: 'Deutsch Tamás' },
-            { topic: 'Bulvár', q: 'Ki nyerte a 2024-es Eurovíziót (vagy közelmúlt)?', a: 'Nemo (Svájc) - 2024' },
-            { topic: 'Bulvár', q: 'Hogy hívják Elon Musk űrcégét?', a: 'SpaceX' },
-            { topic: 'Bulvár', q: 'Melyik énekesnőnek van "Swiftie" rajongótábora?', a: 'Taylor Swift' },
-            { topic: 'Bulvár', q: 'Ki volt Sebestyén Balázs rádiós társa sokáig?', a: 'Vadon Jani' },
-            { topic: 'Bulvár', q: 'Melyik séf vezette a Konyhafőnököt?', a: 'Fördős Zé / Rácz Jenő' },
-            { topic: 'Bulvár', q: 'Ki Paris Hilton egykori asszisztense?', a: 'Kim Kardashian' },
-            { topic: 'Bulvár', q: 'Melyik színész felesége volt Katie Holmes?', a: 'Tom Cruise' },
-            { topic: 'Bulvár', q: 'Hol van a brit királyi család székhelye?', a: 'Buckingham-palota' },
-            { topic: 'Bulvár', q: 'Ki volt Elvis Presley lányának férje (pop király)?', a: 'Michael Jackson' },
-            { topic: 'Bulvár', q: 'Melyik modell volt Leonardo DiCaprio barátnője (sok közül egy)?', a: 'Gisele Bündchen (pl.)' },
-            { topic: 'Bulvár', q: 'Hány gyereke van Angelina Jolie-nak?', a: '6' },
-            { topic: 'Bulvár', q: 'Melyik magyar hírességnek van "Berki" vezetékneve?', a: 'Berki Krisztián' },
-            { topic: 'Bulvár', q: 'Ki a házigazdája a Sztárban Sztárnak (általában)?', a: 'Tilla' },
-            { topic: 'Bulvár', q: 'Melyik Kardashian testvér lett a legfiatalabb milliárdos?', a: 'Kylie Jenner' },
-            { topic: 'Bulvár', q: 'Ki az a "Schobert Norbi"?', a: 'Fitneszedző' },
-            { topic: 'Bulvár', q: 'Melyik színész pofozta meg Chris Rockot az Oscaron?', a: 'Will Smith' },
-            { topic: 'Bulvár', q: 'Ki Madonna lánya?', a: 'Lourdes' },
-            { topic: 'Bulvár', q: 'Melyik énekesnő "Umbrella" című slágere nyert Grammy-t?', a: 'Rihanna' },
-            { topic: 'Bulvár', q: 'Ki volt George Clooney felesége (ügyvéd)?', a: 'Amal Clooney' },
-            { topic: 'Bulvár', q: 'Hány évig volt házas Ben Affleck és Jennifer Garner?', a: '10' },
-            { topic: 'Bulvár', q: 'Melyik magyar szépségkirálynő Kulcsár Edina férje (rapper)?', a: 'G.w.M' },
-            { topic: 'Bulvár', q: 'Ki a brit trónörökös (Vilmos vagy Harry)?', a: 'Vilmos' },
-            { topic: 'Bulvár', q: 'Melyik énekesnő játszott a "Csillag születik" filmben?', a: 'Lady Gaga' },
-            { topic: 'Bulvár', q: 'Ki volt Marilyn Monroe egyik híres férje (író)?', a: 'Arthur Miller' },
-            { topic: 'Bulvár', q: 'Melyik TV2-s műsorvezető vezetett "Napló"-t?', a: 'Sváby András' },
-            { topic: 'Bulvár', q: 'Ki Curtis zenésztársa (rapper)?', a: 'Majka' },
-            { topic: 'Bulvár', q: 'Melyik énekesnő haját borotválta le nyilvánosan 2007-ben?', a: 'Britney Spears' },
-            { topic: 'Bulvár', q: 'Ki volt a "Spice Girls" Victoria Beckhamje?', a: 'Posh Spice' },
-            { topic: 'Bulvár', q: 'Melyik magyar rapper "Gengszter"?', a: 'Ganxsta Zolee' },
-            { topic: 'Bulvár', q: 'Ki Arnold Schwarzenegger felesége volt (Kennedy)?', a: 'Maria Shriver' },
-            { topic: 'Bulvár', q: 'Melyik színész volt a Jóbarátok Chandlerje?', a: 'Matthew Perry' },
-            { topic: 'Bulvár', q: 'Ki Tóth Gabi volt férje (séf)?', a: 'Krausz Gábor' },
-            { topic: 'Bulvár', q: 'Melyik platform tulajdonosa Zuckerberg?', a: 'Meta (Facebook/Insta)' },
-            { topic: 'Bulvár', q: 'Ki "Rubint Réka" férje?', a: 'Schobert Norbi' },
-            { topic: 'Bulvár', q: 'Melyik énekesnő volt Justin Bieber első nagy szerelme?', a: 'Selena Gomez' },
-
-            // --- Élővilág ---
-            { topic: 'Élővilág', q: 'Melyik a leggyorsabb szárazföldi állat?', a: 'Gepárd' },
-            { topic: 'Élővilág', q: 'Melyik madár nem tud repülni?', a: 'Strucc / Pingvin' },
-            { topic: 'Élővilág', q: 'Hány lába van a póknak?', a: '8' },
-            { topic: 'Élővilág', q: 'Melyik állat a "dzsungel királya"?', a: 'Oroszlán' },
-            { topic: 'Élővilág', q: 'Mi a legnagyobb tengeri emlős?', a: 'Kék bálna' },
-            { topic: 'Élővilág', q: 'Melyik kutyafajta a magyar pásztorkutya?', a: 'Puli / Komondor' },
-            { topic: 'Élővilág', q: 'Mit eszik a panda?', a: 'Bambusz' },
-            { topic: 'Élővilág', q: 'Melyik a legokosabbnak tartott madár?', a: 'Varjú / Papagáj' },
-            { topic: 'Élővilág', q: 'Hány szíve van a polipnak?', a: '3' },
-            { topic: 'Élővilág', q: 'Melyik állat alszik téli álmot?', a: 'Medve' },
-            { topic: 'Élővilág', q: 'Melyik a világ legmagasabb állata?', a: 'Zsiráf' },
-            { topic: 'Élővilág', q: 'Melyik rovar készít mézet?', a: 'Méh' },
-            { topic: 'Élővilág', q: 'Hány púpja van a dromedárnak?', a: '1' },
-            { topic: 'Élővilág', q: 'Melyik hüllő váltogatja a színét?', a: 'Kaméleon' },
-            { topic: 'Élővilág', q: 'Melyik a leglasabb állat?', a: 'Lajhár' },
-            { topic: 'Élővilág', q: 'Melyik kontinensen élnek a kenguruk?', a: 'Ausztrália' },
-            { topic: 'Élővilág', q: 'Mi a tudományos neve az embernek?', a: 'Homo Sapiens' },
-            { topic: 'Élővilág', q: 'Melyik hal ragadozó?', a: 'Cápa / Csuka' },
-            { topic: 'Élővilág', q: 'Hány élete van a macskának a mondás szerint?', a: '9' },
-            { topic: 'Élővilág', q: 'Melyik a legnagyobb szárazföldi emlős?', a: 'Elefánt' },
-            { topic: 'Élővilág', q: 'Melyik madár a béke jelképe?', a: 'Galamb' },
-            { topic: 'Élővilág', q: 'Milyen állat a "Némó" a mesében?', a: 'Bohóchal' },
-            { topic: 'Élővilág', q: 'Melyik állatnak van a legjobb memóriája a hiedelem szerint?', a: 'Elefánt' },
-            { topic: 'Élővilág', q: 'Hány lába van egy rovarnak?', a: '6' },
-            { topic: 'Élővilág', q: 'Melyik állat a "sivatag hajója"?', a: 'Teve' },
-            { topic: 'Élővilág', q: 'Hány szeme van a póknak (leggyakrabban)?', a: '8' },
-            { topic: 'Élővilág', q: 'Melyik madár tud hátrafelé repülni?', a: 'Kolibri' },
-            { topic: 'Élővilág', q: 'Mi a legnehezebb szárazföldi állat?', a: 'Afrikai elefánt' },
-            { topic: 'Élővilág', q: 'Melyik állatnak van csőre, de emlős?', a: 'Kacsacsőrű emlős' },
-            { topic: 'Élővilág', q: 'Melyik a legmérgezőbb béka?', a: 'Nyílméregbéka' },
-            { topic: 'Élővilág', q: 'Hány évig élhet egy teknős (akár)?', a: '100+' },
-            { topic: 'Élővilág', q: 'Melyik állat tápláléka az eukaliptusz?', a: 'Koala' },
-            { topic: 'Élővilág', q: 'Mi a delfin légzőszervének neve?', a: 'Légzőnyílás (Tüdő)' },
-            { topic: 'Élővilág', q: 'Melyik a legnagyobb ma élő hüllő?', a: 'Bordás krokodil' },
-            { topic: 'Élővilág', q: 'Melyik állatnak van ujjlenyomata az emberen kívül?', a: 'Koala' },
-            { topic: 'Élővilág', q: 'Hány csápja van a tintahalnak?', a: '10 (8 kar + 2 fogókar)' },
-            { topic: 'Élővilág', q: 'Melyik a leggyorsabb vízi állat?', a: 'Vitorláskardoshal' },
-            { topic: 'Élővilág', q: 'Melyik állat szimbóluma a WWF-nek?', a: 'Panda' },
-            { topic: 'Élővilág', q: 'Hány foga van a cápának élete során?', a: 'Több ezer' },
-            { topic: 'Élővilág', q: 'Melyik a legnagyobb madár?', a: 'Strucc' },
-            { topic: 'Élővilág', q: 'Melyik állatnak van a leghosszabb nyaka?', a: 'Zsiráf' },
-            { topic: 'Élővilág', q: 'Mi a nőstény róka neve?', a: 'Szuka' },
-            { topic: 'Élővilág', q: 'Melyik rovar terjeszti a maláriát?', a: 'Szúnyog' },
-            { topic: 'Élővilág', q: 'Hány lába van egy ráknak?', a: '10' },
-            { topic: 'Élővilág', q: 'Melyik állat a "toportyán"?', a: 'Féreg / (Aranysakál)' },
-            { topic: 'Élővilág', q: 'Melyik a világ legkisebb kutyája?', a: 'Csivava' },
-            { topic: 'Élővilág', q: 'Mi a csikóhal érdekessége (szaporodás)?', a: 'A hím szül' },
-            { topic: 'Élővilág', q: 'Melyik állatnak van a legnagyobb agya?', a: 'Ámbráscet' },
-            { topic: 'Élővilág', q: 'Hány szárnya van a szitakötőnek?', a: '4' },
-            { topic: 'Élővilág', q: 'Melyik állat "nevet"?', a: 'Hiéna' },
-            { topic: 'Élővilág', q: 'Melyik a leglassabban mozgó emlős?', a: 'Lajhár' },
-            { topic: 'Élővilág', q: 'Melyik állat a "szavanna királya"?', a: 'Oroszlán' },
-            { topic: 'Élővilág', q: 'Hány emeletes a méhkaptár (képletesen)?', a: 'Sok' },
-            { topic: 'Élővilág', q: 'Melyik állatnak nő vissza a farka?', a: 'Gyík' },
+        const reels = [
+            document.getElementById('reel-0'),
+            document.getElementById('reel-1'),
+            document.getElementById('reel-2')
         ];
+        
+        const spinButton = document.getElementById('spin-button');
+        const statusText = document.getElementById('status-text');
 
-        // --- GAME STATE ---
-
-        let gameState = {
-            players: {
-                1: { name: '', score: 0 },
-                2: { name: '', score: 0 }
-            },
-            round: 0, // 1, 2, 3
-            status: 'SETUP', // SETUP, ROUND_INTRO, TOPIC_SELECT, QUESTION, ANSWER_REVEAL, ROUND_END, GAME_END
-
-            // Forduló specifikus
-            roundTopics: [], // 3 téma
-            questionsInRoundLeft: 0, // 10
-
-            // Aktuális kör állapot
-            currentTopic: null,
-            attackerId: 1, // Aki választ
-            defenderId: 2, // Aki válaszol
-            currentQuestion: null,
-
-            playedQuestionIds: [], // Hogy ne ismétlődjön
-            timer: 10,
-            timerInterval: null,
-            timerInterval: null,
-            voiceMode: false,
-
-            // AI Integration
-            // AI Integration
-            apiKey: localStorage.getItem('GENIUSZ_API_KEY') || '',
-            aiMode: false,
-            ttsMode: localStorage.getItem('GENIUSZ_TTS_MODE') || (localStorage.getItem('GENIUSZ_API_KEY') ? 'cloud' : 'browser')
-        };
-
-        // --- LOGIC ---
-
-        function initGame() {
-            const p1Name = document.getElementById('p1-name').value || 'Játékos 1';
-            const p2Name = document.getElementById('p2-name').value || 'Játékos 2';
-
-            gameState.voiceMode = true;
-
-            // Checkbox for AI mode
-            const aiEnabled = document.getElementById('ai-mode-toggle') ? document.getElementById('ai-mode-toggle').checked : false;
-            gameState.aiMode = aiEnabled && gameState.apiKey !== '';
-
-            gameState.players[1].name = p1Name;
-            gameState.players[2].name = p2Name;
-            gameState.round = 0;
-            gameState.players[1].score = 0;
-            gameState.players[2].score = 0;
-            gameState.playedQuestionIds = [];
-
-            startRound(1);
+        // Initial populate
+        function initReels() {
+            reels.forEach(reel => {
+                renderItems(reel, categories[0]);
+            });
         }
 
-        // --- TTS CONTROL ---
-
-        let isSystemSpeaking = false; // Flag to prevent overlaps
-        let voiceObjHU = null; // Store the Hungarian voice
-
-        function loadVoices() {
-            const voices = window.speechSynthesis.getVoices();
-            // Try to find a nice Hungarian voice (Google's is usually good)
-            voiceObjHU = voices.find(v => v.lang.includes('hu') && v.name.includes('Google')) ||
-                voices.find(v => v.lang.includes('hu'));
-        }
-
-        // Initialize voices
-        loadVoices();
-        if (window.speechSynthesis.onvoiceschanged !== undefined) {
-            window.speechSynthesis.onvoiceschanged = loadVoices;
-        }
-
-        async function playCloudTTS(text) {
-            console.log("Cloud TTS hívás:", text);
-            try {
-                const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${gameState.apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        input: { text: text },
-                        // Standard Wavenet voice (Check availability in console if needed)
-                        voice: { languageCode: 'hu-HU', name: 'hu-HU-Wavenet-A' },
-                        audioConfig: { audioEncoding: 'MP3' }
-                    })
-                });
-
-                if (!response.ok) throw new Error("TTS API Error: " + response.statusText);
-
-                const data = await response.json();
-                const audioContent = data.audioContent;
-
-                const audio = new Audio("data:audio/mp3;base64," + audioContent);
-                audio.onended = () => {
-                    isSystemSpeaking = false;
-                };
-                isSystemSpeaking = true;
-                audio.play();
-
-            } catch (e) {
-                console.error("Cloud TTS Hiba:", e);
-                // Fallback to browser
-                // alert("Cloud TTS hiba (API engedélyezve van?). Visszaváltás böngészőre.");
-                // Suppress alert to avoid annoyance if it falls back often, just log
-                gameState.ttsMode = 'browser';
-                speakText(text);
-            }
-        }
-
-        function speakText(text) {
-            if (!gameState.voiceMode) return;
-
-            // Check Cloud Mode
-            if (gameState.ttsMode === 'cloud' && gameState.apiKey) {
-                playCloudTTS(text);
-                return;
-            }
-
-            // EXISTING BROWSER LOGIC...
-            // Stop previous speech
-            window.speechSynthesis.cancel();
-            isSystemSpeaking = true;
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 1.0;
-            if (voiceObjHU) utterance.voice = voiceObjHU;
-            utterance.lang = 'hu-HU';
-
-            utterance.onend = () => {
-                isSystemSpeaking = false;
-            };
-            utterance.onerror = () => {
-                isSystemSpeaking = false;
-            };
-
-            window.speechSynthesis.speak(utterance);
-        }
-
-        // REMOVED startListening, stopListening, verifyVoiceAnswer, verifyAnswerAI, isAnswerCorrect, levenshtein
-
-
-
-        function shuffle(array) {
-            return array.sort(() => Math.random() - 0.5);
-        }
-
-        function startRound(roundNum) {
-            gameState.round = roundNum;
-            gameState.questionsInRoundLeft = 10;
-
-            // 3 véletlen téma sorsolása
-            gameState.roundTopics = shuffle([...TOPICS]).slice(0, 3);
-
-            // Kezdő játékos beállítása (1. körben P1 választ P2-nek -> de auto; 
-            // Szabály: "A játék legelején a témaválasztás legyen automatikus"
-            // Alapeset: P1 az "Attacker" (Választó), P2 a "Defender" (Válaszoló)
-            gameState.attackerId = 1;
-            gameState.defenderId = 2;
-
-            gameState.status = 'ROUND_INTRO';
-            render();
-
-            setTimeout(() => {
-                if (roundNum === 1) {
-                    // Automatikus választás az első körben
-                    const autoTopic = gameState.roundTopics[0];
-                    startTurn(autoTopic);
-                } else {
-                    gameState.status = 'TOPIC_SELECT';
-                    render();
-                }
-            }, 3000);
-        }
-
-        function selectTopic(topic) {
-            startTurn(topic);
-        }
-
-        // --- AI LOGIC ---
-
-        async function generateQuestionAI(topic) {
-            try {
-                const prompt = `Generate a general knowledge quiz question in Hungarian for the topic: "${topic}". 
-Format: JSON object with keys "q" (question) and "a" (answer). 
-Difficulty: Medium/Hard. 
-The answer should be concise.`;
-
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${gameState.apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
-
-                const data = await response.json();
-                const text = data.candidates[0].content.parts[0].text;
-                // Clean markdown JSON
-                const jsonStr = text.replace(/```json|```/g, '').trim();
-                const qObj = JSON.parse(jsonStr);
-
-                // Add topic back and flag
-                qObj.topic = topic;
-                qObj.isAiGenerated = true; // Flag for UI
-                return qObj;
-
-            } catch (error) {
-                console.error("AI Gen Error részletek:", error);
-                // alert("AI Hiba: " + error.message); // Debugging
-                return null; // Fallback
-            }
-        }
-
-        // --- SETTINGS LOGIC ---
-        function toggleSettings() {
-            const modal = document.getElementById('settings-modal');
-            modal.classList.toggle('hidden');
-        }
-
-        function saveSettings() {
-            const keyInput = document.getElementById('api-key-input').value;
-            const ttsSelect = document.getElementById('tts-mode-select').value;
-
-            localStorage.setItem('GENIUSZ_API_KEY', keyInput.trim());
-            localStorage.setItem('GENIUSZ_TTS_MODE', ttsSelect);
-
-            gameState.apiKey = keyInput.trim();
-            gameState.ttsMode = ttsSelect;
-
-            toggleSettings();
-            render(); // Re-render to show AI toggle if key is present
-        }
-
-        function getQuestionForTopic(topic) {
-            // Szűrjük a témára és ami még nem volt
-            const available = QUESTION_DB.filter(q => q.topic === topic && !gameState.playedQuestionIds.includes(q.q));
-
-            if (available.length === 0) return null;
-
-            // Véletlenszerű választás
-            const randomQ = available[Math.floor(Math.random() * available.length)];
-            return randomQ;
-        }
-
-        async function startTurn(topic) {
-            gameState.currentTopic = topic;
-
-            let q = null;
-
-            // Try AI Generation
-            if (gameState.aiMode && gameState.apiKey) {
-                // Show loading state?
-                // For simplicity, we block briefly (UI might freeze slightly without async handling update)
-                // Ideally we show a spinner.
-                showLoading(true); // Show spinner
-                q = await generateQuestionAI(topic);
-                showLoading(false); // Hide spinner
-            }
-
-            // Fallback to static DB if AI fails or not enabled
-            if (!q) {
-                q = getQuestionForTopic(topic);
-                if (q) q.isAiGenerated = false;
-            }
-
-            if (!q) {
-                alert("Elfogytak a kérdések ebben a témában!");
-                showLoading(false);
-                gameState.status = 'TOPIC_SELECT'; // Válassz mást
-                render();
-                return;
-            }
-
-            gameState.currentQuestion = q;
-            gameState.playedQuestionIds.push(q.q);
-
-            gameState.status = 'QUESTION';
-            gameState.timedOut = false;
-            gameState.timer = 10;
-
-            render();
-
-            // Voice mode: Read question
-            if (gameState.voiceMode) {
-                speakText(q.q);
-            }
-            startTimer();
-        }
-
-        function startTimer() {
-            clearInterval(gameState.timerInterval);
-            gameState.timerInterval = setInterval(() => {
-                gameState.timer--;
-                document.getElementById('timer-display').innerText = gameState.timer;
-
-                if (gameState.timer <= 0) {
-                    clearInterval(gameState.timerInterval);
-                    timeUp();
-                }
-            }, 1000);
-        }
-
-        function revealAnswer() {
-            clearInterval(gameState.timerInterval);
-            window.speechSynthesis.cancel(); // Stop speaking
-
-            gameState.status = 'ANSWER_REVEAL';
-            render();
-
-            // Read the correct answer
-            if (gameState.voiceMode) {
-                speakText("A helyes válasz: " + gameState.currentQuestion.a);
-            }
-        }
-
-        function timeUp() {
-            gameState.timedOut = true;
-            revealAnswer();
-        }
-
-        function handleResult(isCorrect) {
-            gameState.questionsInRoundLeft--;
-
-            if (isCorrect) {
-                // Pont a válaszolónak
-                gameState.players[gameState.defenderId].score++;
-
-                // Ha van még kérdés a fordulóban
-                if (gameState.questionsInRoundLeft > 0) {
-                    // MARAD a válaszoló, MARAD a téma (Geniusz szabály: amíg tudja, megy tovább)
-                    // De várjunk, a következő kérdést "hívja".
-                    // Késleltetés
-                    setTimeout(() => {
-                        startTurn(gameState.currentTopic);
-                    }, 2000);
-                } else {
-                    endRound();
-                }
-
-            } else {
-                // Rossz válasz -> Szerepcsere
-                // "Ha a 2-es játékos nem tudja... akkor ő választ új témakört"
-                // Tehát: Attacker <-> Defender swap
-                const temp = gameState.attackerId;
-                gameState.attackerId = gameState.defenderId;
-                gameState.defenderId = temp;
-
-                if (gameState.questionsInRoundLeft > 0) {
-                    gameState.status = 'TOPIC_SELECT';
-                    render();
-                } else {
-                    endRound();
-                }
-            }
-            render(); // Pontszám frissítés miatt
-        }
-
-        function endRound() {
-            if (gameState.round < 3) {
-                setTimeout(() => {
-                    startRound(gameState.round + 1);
-                }, 2000);
-            } else {
-                gameState.status = 'GAME_END';
-                render();
-            }
-        }
-
-        // --- RENDERER ---
-
-        function render() {
-            const app = document.getElementById('app');
+        function renderItems(reel, selected) {
+            // Create a long list for the scrolling effect
             let html = '';
-
-            // Header (Mindig látszik, kivéve setup)
-            if (gameState.status !== 'SETUP') {
-                html += `
-                    <div class="flex justify-between items-center mb-8 glass-panel p-4 rounded-2xl">
-                        <div class="text-center w-1/3 ${gameState.defenderId === 1 ? 'border-b-4 border-genius-gold pb-2' : 'opacity-50'}">
-                            <div class="text-sm uppercase tracking-widest text-gray-400">Játékos 1</div>
-                            <div class="text-2xl font-bold text-genius-accent">${gameState.players[1].name}</div>
-                            <div class="text-4xl font-black text-white">${gameState.players[1].score}</div>
-                        </div>
-                        <div class="text-center w-1/3">
-                            <div class="text-xs uppercase text-genius-gold mb-1">Forduló</div>
-                            <div class="text-3xl font-black text-white bg-genius-gold/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto border-2 border-genius-gold">${gameState.round}/3</div>
-                            <div class="text-xs text-gray-400 mt-2">Még ${gameState.questionsInRoundLeft} kérdés</div>
-                        </div>
-                        <div class="text-center w-1/3 ${gameState.defenderId === 2 ? 'border-b-4 border-genius-gold pb-2' : 'opacity-50'}">
-                            <div class="text-sm uppercase tracking-widest text-gray-400">Játékos 2</div>
-                            <div class="text-2xl font-bold text-genius-accent">${gameState.players[2].name}</div>
-                            <div class="text-4xl font-black text-white">${gameState.players[2].score}</div>
-                        </div>
-                    </div>
-                `;
+            // Pre-items for animation buffer
+            for(let i = 0; i < 20; i++) {
+                const cat = categories[Math.floor(Math.random() * categories.length)];
+                html += `<div class="category-item">${cat}</div>`;
             }
-
-            // SETUP
-            if (gameState.status === 'SETUP') {
-                html = `
-                    <div class="max-w-md mx-auto text-center space-y-8 mt-20">
-                        <h1 class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-genius-gold to-yellow-600 mb-4">GÉNIUSZ</h1>
-                        <p class="text-gray-400 mb-8">Kvíz Házibajnokság</p>
-                        
-                        <div class="space-y-4 glass-panel p-8 rounded-2xl">
-                            <div>
-                                <label class="block text-left text-sm text-gray-400 mb-1">1. Játékos Neve</label>
-                                <input id="p1-name" type="text" value="Játékos 1" class="w-full bg-black/50 border border-gray-700 rounded-lg p-3 text-white focus:border-genius-gold outline-none transition">
-                            </div>
-                            <div>
-                                <label class="block text-left text-sm text-gray-400 mb-1">2. Játékos Neve</label>
-                                <input id="p2-name" type="text" value="Játékos 2" class="w-full bg-black/50 border border-gray-700 rounded-lg p-3 text-white focus:border-genius-gold outline-none transition">
-                            </div>
-                            
-                            <!-- Voice Mode Toggle REMOVED -->
-                            <!-- Renaming or removing section? keeping it simple -->
-
-                            <button onclick="initGame()" class="w-full bg-genius-gold hover:bg-yellow-400 text-black font-black py-4 rounded-lg uppercase tracking-wider text-xl transition transform hover:scale-105 shadow-lg shadow-yellow-500/20">
-                                Játék Indítása
-                            </button>
-                            
-                            <!-- Settings Trigger -->
-                            <div class="mt-4 text-center">
-                                <button onclick="toggleSettings()" class="text-gray-500 hover:text-white underline text-sm">
-                                    ⚙️ Beállítások (AI Kulcs)
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Settings Modal -->
-                    <div id="settings-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center">
-                        <div class="bg-gray-800 p-8 rounded-2xl max-w-md w-full border border-gray-700">
-                            <h2 class="text-2xl font-bold text-white mb-4">Beállítások</h2>
-                            
-                            <div class="mb-4">
-                                <label class="block text-gray-400 mb-2 text-sm">Google Gemini API Kulcs</label>
-                                <input type="password" id="api-key-input" value="${gameState.apiKey}" placeholder="AIzaSy..." class="w-full bg-black/50 border border-gray-600 rounded p-3 text-white focus:border-genius-gold outline-none">
-                                <p class="text-xs text-gray-500 mt-1">Ingyenesen beszerezhető a Google AI Studio-ban. A böngésződ tárolja.</p>
-                            </div>
-                            
-                            <div class="mb-6">
-                                <label class="block text-gray-400 mb-2 text-sm">Hang Generálás</label>
-                                <select id="tts-mode-select" class="w-full bg-black/50 border border-gray-600 rounded p-3 text-white focus:border-genius-gold outline-none">
-                                    <option value="browser" ${gameState.ttsMode === 'browser' ? 'selected' : ''}>Böngésző (Ingyenes, Offline)</option>
-                                    <option value="cloud" ${gameState.ttsMode === 'cloud' ? 'selected' : ''}>Google Cloud AI (Prémium, Online)</option>
-                                </select>
-                                <p class="text-xs text-gray-500 mt-1">A Cloudhoz engedélyezni kell a "Cloud Text-to-Speech API"-t a Google Console-on!</p>
-                            </div>
-
-                            <div class="flex justify-end gap-2">
-                                <button onclick="toggleSettings()" class="px-4 py-2 text-gray-300 hover:text-white">Mégse</button>
-                                <button onclick="saveSettings()" class="px-6 py-2 bg-genius-gold text-black font-bold rounded hover:bg-yellow-400">Mentés</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // ROUND INTRO
-            else if (gameState.status === 'ROUND_INTRO') {
-                html += `
-                    <div class="text-center mt-20 animate-fade-in-up">
-                        <div class="text-2xl text-genius-gold mb-4 font-bold tracking-widest uppercase">Készülj!</div>
-                        <div class="text-5xl font-black text-white mb-8">Indul a ${gameState.round}. forduló</div>
-                        <div class="flex justify-center space-x-2">
-                             <div class="w-3 h-3 bg-white rounded-full animate-bounce"></div>
-                             <div class="w-3 h-3 bg-white rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                             <div class="w-3 h-3 bg-white rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // TOPIC SELECT
-            else if (gameState.status === 'TOPIC_SELECT') {
-                html += `
-                    <div class="text-center mt-10">
-                        <div class="mb-8">
-                            <span class="text-genius-gold font-bold text-xl">${gameState.players[gameState.attackerId].name}</span>
-                            <span class="text-gray-300 text-lg"> választ témát ellenfelének...</span>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
-                            ${gameState.roundTopics.map(topic => `
-                                <button onclick="selectTopic('${topic}')" class="group relative overflow-hidden bg-gray-800 hover:bg-gray-700 border-2 border-gray-700 hover:border-genius-gold p-6 rounded-xl transition duration-300 transform hover:-translate-y-1">
-                                    <div class="absolute inset-0 bg-gradient-to-r from-genius-gold/0 via-genius-gold/10 to-genius-gold/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                                    <span class="text-2xl font-bold text-white group-hover:text-genius-gold">${topic}</span>
-                                </button>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            }
-
-            // QUESTION
-            else if (gameState.status === 'QUESTION') {
-                html += `
-                    <div class="mt-8 max-w-4xl mx-auto">
-                        <!-- Topic Label -->
-                        <div class="text-center mb-6">
-                            <span class="px-4 py-1 rounded-full border border-genius-gold text-genius-gold text-sm uppercase tracking-widest font-bold bg-genius-gold/10">
-                                ${gameState.currentTopic}
-                            </span>
-                        </div>
-
-                        <!-- Question Card -->
-                        <div class="glass-panel p-10 rounded-3xl text-center min-h-[300px] flex flex-col items-center justify-center relative border-t-4 border-genius-gold shadow-2xl shadow-black/50">
-                            <h2 class="text-3xl md:text-4xl font-bold text-white leading-tight mb-8">
-                                ${gameState.currentQuestion.q}
-                            </h2>
-                            
-                            <!-- Timer -->
-                            <div class="absolute -top-16 right-0 left-0 mx-auto w-24 h-24 bg-gray-900 rounded-full border-4 border-red-500 flex items-center justify-center shadow-lg z-10">
-                                <span id="timer-display" class="text-4xl font-black text-red-500 animate-pulse-fast">${gameState.timer}</span>
-                            </div>
-                            
-                            <!-- AI Badge -->
-                            ${gameState.currentQuestion.isAiGenerated ? `
-                                <div class="absolute top-4 right-4 bg-purple-600/80 text-white text-xs font-bold px-3 py-1 rounded-full border border-purple-400 shadow-lg animate-pulse">
-                                    ✨ AI Generált
-                                </div>
-                            ` : ''}
-
-                            <!-- Voice Indicator REMOVED -->
-                        </div>
-
-                        <!-- Action Button -->
-                        <div class="mt-8 text-center">
-                            <button onclick="revealAnswer()" class="w-full max-w-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white text-2xl font-black py-6 rounded-xl shadow-lg transform hover:scale-[1.02] transition active:scale-95">
-                                TUDOM A VÁLASZT!
-                            </button>
-                            <p class="text-gray-500 mt-2 text-sm">Megállítás és válasz ellenőrzése</p>
-                        </div>
-                        
-                        <div class="mt-6 text-center text-gray-400">
-                             Válaszol: <span class="text-white font-bold">${gameState.players[gameState.defenderId].name}</span>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // ANSWER REVEAL
-            else if (gameState.status === 'ANSWER_REVEAL') {
-                const timeoutMsg = gameState.timedOut ?
-                    '<div class="text-red-500 font-bold text-3xl mb-6 animate-pulse">LEJÁRT AZ IDŐ!</div>' : '';
-
-                const buttons = gameState.timedOut ? `
-                    <button onclick="handleResult(false)" class="w-full bg-red-600 hover:bg-red-500 text-white py-4 rounded-xl font-bold text-xl transition transform hover:scale-105 shadow-lg border-b-4 border-red-800 mb-4">
-                        TOVÁBB (Helytelen)
-                    </button>
-                    <!-- Correction Button -->
-                    <button onclick="handleResult(true)" class="w-full bg-yellow-600 hover:bg-yellow-500 text-white py-2 rounded-xl font-bold text-sm transition transform hover:scale-105 shadow-lg border-b-4 border-yellow-800">
-                        Jó volt a válasz (Korrekció)
-                    </button>
-                ` : `
-                    <button onclick="handleResult(true)" class="bg-green-600 hover:bg-green-500 text-white py-4 rounded-xl font-bold text-xl transition transform hover:scale-105 shadow-lg border-b-4 border-green-800">
-                        HELYES
-                    </button>
-                    <button onclick="handleResult(false)" class="bg-red-600 hover:bg-red-500 text-white py-4 rounded-xl font-bold text-xl transition transform hover:scale-105 shadow-lg border-b-4 border-red-800">
-                        HELYTELEN
-                    </button>
-                `;
-
-                html += `
-                    <div class="mt-8 max-w-4xl mx-auto">
-                         <div class="glass-panel p-10 rounded-3xl text-center border border-gray-600">
-                            ${timeoutMsg}
-                            <div class="text-gray-400 mb-2 uppercase text-sm">A kérdés volt:</div>
-                            <h3 class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">${gameState.currentQuestion.q}</h3>
-                            
-                            <div class="text-genius-gold mb-2 uppercase text-sm font-bold">Helyes válasz:</div>
-                            <h2 class="text-4xl md:text-5xl font-black text-white mb-10 animate-fade-in">
-                                ${gameState.currentQuestion.a}
-                            </h2>
-
-                            <div class="grid ${gameState.timedOut ? 'grid-cols-1' : 'grid-cols-2'} gap-6 max-w-xl mx-auto">
-                                ${buttons}
-                            </div>
-                         </div>
-                    </div>
-                `;
-            }
-
-            // GAME END
-            else if (gameState.status === 'GAME_END') {
-                const p1 = gameState.players[1];
-                const p2 = gameState.players[2];
-                let winnerName = p1.score > p2.score ? p1.name : (p2.score > p1.score ? p2.name : "Döntetlen");
-
-                html += `
-                    <div class="text-center mt-10">
-                        <h1 class="text-6xl font-black text-genius-gold mb-8">JÁTÉK VÉGE</h1>
-                        
-                        <div class="glass-panel p-8 rounded-3xl max-w-2xl mx-auto mb-8 border border-gray-600">
-                            <div class="text-2xl text-gray-400 mb-4">A győztes:</div>
-                            <div class="text-5xl font-black text-white mb-8">${winnerName}</div>
-                            
-                            <div class="flex justify-center space-x-12 text-3xl">
-                                <div>${p1.name}: <span class="font-bold text-genius-gold">${p1.score}</span></div>
-                                <div>${p2.name}: <span class="font-bold text-genius-gold">${p2.score}</span></div>
-                            </div>
-                        </div>
-                        
-                        <button onclick="location.reload()" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-lg font-bold transition">
-                            Új Játék
-                        </button>
-                    </div>
-                `;
-            }
-
-            // Add Loading Overlay to HTML
-            html += `
-                <div id="ai-loading-overlay" class="fixed inset-0 bg-black/80 z-[100] hidden flex-col items-center justify-center backdrop-blur-sm">
-                    <div class="w-16 h-16 border-4 border-genius-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <div class="text-white text-xl font-bold animate-pulse">AI Generál...</div>
-                </div>
-            `;
-
-            app.innerHTML = html;
+            // The actual result
+            html += `<div class="category-item text-yellow-400 scale-110">${selected}</div>`;
+            reel.innerHTML = html;
         }
 
-        // Helper for loading
-        function showLoading(show) {
-            const overlay = document.getElementById('ai-loading-overlay');
-            if (overlay) {
-                if (show) { overlay.classList.remove('hidden'); overlay.classList.add('flex'); }
-                else { overlay.classList.add('hidden'); overlay.classList.remove('flex'); }
+        async function spin() {
+            spinButton.disabled = true;
+            spinButton.classList.remove('pulse');
+            statusText.innerText = "Gundel Takács Gábor indítja a pörgetést...";
+            
+            // Randomly pick 3 distinct categories
+            let shuffled = [...categories].sort(() => 0.5 - Math.random());
+            let selected = shuffled.slice(0, 3);
+
+            for (let i = 0; i < 3; i++) {
+                // Reset position
+                reels[i].style.transition = 'none';
+                reels[i].style.transform = 'translateY(0)';
+                
+                // Force reflow
+                reels[i].offsetHeight;
+
+                // Re-render items with the result at the end
+                renderItems(reels[i], selected[i]);
+
+                // Trigger animation
+                setTimeout(() => {
+                    reels[i].style.transition = `transform ${2 + i * 0.5}s cubic-bezier(0.23, 1, 0.32, 1)`;
+                    // Each item is 80px. We have 20 items before the result.
+                    reels[i].style.transform = `translateY(-${20 * 80}px)`;
+                }, 50);
             }
+
+            // Wait for the last animation to finish
+            setTimeout(() => {
+                spinButton.disabled = false;
+                spinButton.classList.add('pulse');
+                statusText.innerText = "A kategóriák rögzítve. Kezdődhet a játék!";
+            }, 3500);
         }
 
-        // Keyboard controls
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && gameState.status === 'QUESTION') {
-                e.preventDefault(); // Prevent scrolling
-                revealAnswer();
-            }
-        });
-
-        // Indítás
-        render();
-
+        spinButton.addEventListener('click', spin);
+        window.onload = initReels;
     </script>
 </body>
-
 </html>
