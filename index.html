@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="hu">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,9 +19,17 @@
         }
 
         @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         .genius-card {
@@ -45,14 +54,30 @@
 
         .category-item {
             height: 80px;
+            /* Must match SLOT_HEIGHT in JS */
+            flex-shrink: 0;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            font-size: 1.25rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            /* Mobile optimized */
+            line-height: 1.1;
+            text-align: center;
+            padding: 0 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            word-break: break-word;
+        }
+
+        @media (min-width: 768px) {
+            .category-item {
+                font-size: 1.25rem;
+                letter-spacing: 2px;
+            }
         }
 
         .btn-genius {
@@ -62,7 +87,7 @@
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 3px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
@@ -91,8 +116,13 @@
         }
 
         @keyframes pulse-animation {
-            0% { box-shadow: 0 0 0 0px rgba(253, 187, 45, 0.7); }
-            100% { box-shadow: 0 0 0 20px rgba(253, 187, 45, 0); }
+            0% {
+                box-shadow: 0 0 0 0px rgba(253, 187, 45, 0.7);
+            }
+
+            100% {
+                box-shadow: 0 0 0 20px rgba(253, 187, 45, 0);
+            }
         }
 
         .featured-slot {
@@ -118,18 +148,27 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-50%) translateX(10px); }
-            to { opacity: 1; transform: translateY(-50%) translateX(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-50%) translateX(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(-50%) translateX(0);
+            }
         }
     </style>
 </head>
+
 <body class="flex items-center justify-center p-4">
 
     <div class="max-w-2xl w-full">
         <!-- Header -->
-        <div class="text-center mb-12">
-            <h1 class="text-6xl font-black italic tracking-tighter mb-2" style="color: #fdbb2d; text-shadow: 4px 4px 0px #b21f1f;">GÉNIUSZ</h1>
-            <p class="text-lg opacity-80 uppercase tracking-widest font-bold">A tudás hatalom</p>
+        <div class="text-center mb-8 md:mb-12">
+            <h1 class="text-4xl md:text-6xl font-black italic tracking-tighter mb-2"
+                style="color: #fdbb2d; text-shadow: 2px 2px 0px #b21f1f;">GÉNIUSZ</h1>
+            <p class="text-xs md:text-lg opacity-80 uppercase tracking-widest font-bold">A tudás hatalom</p>
         </div>
 
         <!-- Main Machine Area -->
@@ -156,7 +195,8 @@
                 Témakörök Sorsolása
             </button>
             <p id="status-text" class="mt-6 text-sm italic font-medium opacity-70">Készen áll a párbajra?</p>
-            <div id="last-drawn-info" class="mt-4 text-[10px] uppercase tracking-widest opacity-40 text-center max-w-xs"></div>
+            <div id="last-drawn-info"
+                class="mt-4 text-[10px] uppercase tracking-widest opacity-40 text-center max-w-xs"></div>
         </div>
     </div>
 
@@ -176,19 +216,20 @@
 
         // Memory to store previous draw
         let previousSelection = [];
+        const SLOT_HEIGHT = 80;
 
         const reels = [
             document.getElementById('reel-0'),
             document.getElementById('reel-1'),
             document.getElementById('reel-2')
         ];
-        
+
         const containers = [
             document.getElementById('container-0'),
             document.getElementById('container-1'),
             document.getElementById('container-2')
         ];
-        
+
         const spinButton = document.getElementById('spin-button');
         const statusText = document.getElementById('status-text');
         const lastDrawnElement = document.getElementById('last-drawn-info');
@@ -202,7 +243,7 @@
         function renderItems(reel, selected) {
             let html = '';
             // Pre-items for animation buffer
-            for(let i = 0; i < 25; i++) {
+            for (let i = 0; i < 25; i++) {
                 const cat = categories[Math.floor(Math.random() * categories.length)];
                 html += `<div class="category-item">${cat}</div>`;
             }
@@ -215,7 +256,7 @@
             spinButton.disabled = true;
             spinButton.classList.remove('pulse');
             statusText.innerText = "Gundel Takács Gábor indítja a pörgetést...";
-            
+
             // Clear previous highlighting
             containers.forEach(c => {
                 c.classList.remove('featured-slot');
@@ -225,11 +266,18 @@
 
             // Filter out categories that were drawn in the previous round
             const availableCategories = categories.filter(cat => !previousSelection.includes(cat));
-            
-            // Randomly pick 3 distinct categories from available ones
-            let shuffled = [...availableCategories].sort(() => 0.5 - Math.random());
+
+            // Safety check: fall back to all categories if pool is too small
+            const pool = availableCategories.length >= 3 ? availableCategories : categories;
+
+            // Fisher-Yates shuffle for true randomness
+            let shuffled = [...pool];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
             let selected = shuffled.slice(0, 3);
-            
+
             // Pick featured index
             const featuredIndex = Math.floor(Math.random() * 3);
 
@@ -242,7 +290,7 @@
 
                 setTimeout(() => {
                     reels[i].style.transition = `transform ${2 + i * 0.5}s cubic-bezier(0.23, 1, 0.32, 1)`;
-                    reels[i].style.transform = `translateY(-${25 * 80}px)`;
+                    reels[i].style.transform = `translateY(-${25 * SLOT_HEIGHT}px)`;
                 }, 50);
             }
 
@@ -250,24 +298,24 @@
             setTimeout(() => {
                 spinButton.disabled = false;
                 spinButton.classList.add('pulse');
-                
+
                 // Highlight the selected one
                 const targetContainer = containers[featuredIndex];
                 targetContainer.classList.add('featured-slot');
-                
+
                 const tag = document.createElement('div');
                 tag.className = 'featured-tag';
                 tag.innerText = 'KIEMELT';
                 targetContainer.appendChild(tag);
 
                 statusText.innerText = `A kategóriák rögzítve. Kiemelt témakör: ${selected[featuredIndex]}!`;
-                
+
                 // Update history display
                 lastDrawnElement.innerText = `Kizárva a következő körből: ${selected.join(', ')}`;
-                
+
                 // Save this selection to block it in the NEXT spin
                 previousSelection = [...selected];
-                
+
             }, 3500);
         }
 
@@ -275,4 +323,5 @@
         window.onload = initReels;
     </script>
 </body>
+
 </html>
